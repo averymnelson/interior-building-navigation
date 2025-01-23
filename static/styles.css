@@ -1,0 +1,33 @@
+/* https://brand.uark.edu/graphic-identity/official-colors.php */
+
+/* Default icon color (Spoofer's Stone) */
+.icon {
+    color: #424242;
+}
+
+/* Default tab text styling (Spoofer's Stone) */
+p {
+    color: #424242;
+    font-weight: bold;
+}
+
+/* Active tab icon color (Cardinal Red) */
+.active .icon {
+    color: #9D2235;
+}
+
+/* Active tab text styling (Cardinal Red) */
+.active p {
+    color: #9D2235;
+    font-weight: bold;
+}
+
+/* icons and text are well-aligned */
+footer a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 0.75rem; 
+}
