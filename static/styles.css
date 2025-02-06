@@ -5,6 +5,62 @@ body {
     background-color: #ffffff;
 }
 
+/* Walking Directions Popup */
+.wayfinding-popup {
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Walking Icon */
+.wayfinding-popup .icon {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+/* Input Group */
+.input-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* Icon Labels */
+.icon-label {
+    background: #611327;
+    color: #ffffff;
+    padding: 5px;
+    border-radius: 50%;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+/* Input Fields */
+.input-group input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Get Directions Button (Cardinal Red)*/
+.get-directions {
+    width: 100%;
+    background: #9D2235;
+    color: #ffffff;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+/* (Old Main Brick) */
+.get-directions:hover {
+    background: #611327;
+}
+
 /* Special background color for the Settings page (White River Sand) */
 .settings-bg {
     background-color: #DDDCC5 !important;
@@ -52,7 +108,7 @@ body {
 /* Modal Box */
 .modal-content {
     background-color: #660d1a;
-    color: white;
+    color: #ffffff;
     width: 400px;
     padding: 20px;
     border-radius: 20px;
