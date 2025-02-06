@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="{{ 'settings-bg' if title == 'Settings' else '' }}">
+    <!-- Header -->
+    <header class="bg-white text-dark text-center py-3 border-bottom">
+        <img src="{{ url_for('static', filename='images/uark_logo.png') }}" 
+             alt="University of Arkansas Logo" 
+             class="img-fluid" style="max-height: 75px;">
+    </header>
+
+    <!-- Content -->
+    <main class="container my-3">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer with Tabs -->
+    <footer class="fixed-bottom bg-light border-top">
+        <div class="d-flex justify-content-around py-2">
+            <!-- Home Tab -->
+            <a href="{{ url_for('home') }}" class="text-decoration-none text-center {{ 'active' if title == 'Home' else '' }}">
+                <i class="bi bi-house-fill icon" style="font-size: 1.25rem;"></i>
+                <p class="mb-0">Home</p>
+            </a>
+
+            <!-- Wayfinding Tab -->
+            <a href="{{ url_for('wayfinding') }}" class="text-decoration-none text-center {{ 'active' if title == 'Wayfinding' else '' }}">
+                <i class="bi bi-compass-fill icon" style="font-size: 1.25rem;"></i>
+                <p class="mb-0">Wayfinding</p>
+            </a>
+
+            <!-- Settings Tab -->
+            <a href="{{ url_for('settings') }}" class="text-decoration-none text-center {{ 'active' if title == 'Settings' else '' }}">
+                <i class="bi bi-gear-fill icon" style="font-size: 1.25rem;"></i>
+                <p class="mb-0">Settings</p>
+            </a>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+/* https://brand.uark.edu/graphic-identity/official-colors.php */
+
+/* Default background color for all pages (Apple Blossom)*/
+body {
+    background-color: #ffffff;
+}
+
+/* Special background color for the Settings page (White River Sand) */
+.settings-bg {
+    background-color: #DDDCC5 !important;
+}
+
+/* Custom Toggle Colors (Apple Blossom)(Cardinal Red) */
+.toggle-switch {
+    width: 75px !important;
+    height: 25px;
+    background-color: #ffffff;
+    border: 2px solid #9D2235;
+}
+.toggle-switch:checked {
+    background-color: #9D2235;
+    border: 2px solid #9D2235;
+}
+
+/* Admin Login Button */
+.admin-button {
+    background-color: #9D2235;
+    color: #ffffff;
+    padding: 5px 15px;
+    font-size: 1.2rem;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+/* (Old Main Brick) */
+.admin-button:hover {
+    background-color: #611327;
+}
+
+/* Modal Background */
+.modal {
+    display: none; /* Initially hidden */
+    position: fixed;
+    z-index: 10;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+}
+
+/* Modal Box */
+.modal-content {
+    background-color: #660d1a;
+    color: white;
+    width: 400px;
+    padding: 20px;
+    border-radius: 20px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Close Button */
+.close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Input Fields */
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: none;
+}
+
+/* Submit Button */
+.submit-button {
+    background-color: #ccc;
+    color: #660d1a;
+    padding: 10px;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* Default icon color (Spoofer's Stone) */
+.icon {
+    color: #424242;
+}
+
+/* Default tab text styling (Spoofer's Stone) */
+p {
+    color: #424242;
+    font-weight: bold;
+}
+
+/* Active tab icon color (Cardinal Red) */
+.active .icon {
+    color: #9D2235;
+}
+
+/* Active tab text styling (Cardinal Red) */
+.active p {
+    color: #9D2235;
+    font-weight: bold;
+}
+
+/* icons and text are well-aligned */
+footer a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 0.75rem; 
+}
