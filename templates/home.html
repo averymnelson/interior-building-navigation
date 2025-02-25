@@ -2,4 +2,30 @@
 {% block content %}
 <h1>Welcome to the University of Arkansas App</h1>
 <p>This is the home page content.</p>
+
+
+<!-- Map Container -->
+<div id="map" style="width: 100%; height: 500px; border: 2px solid #ccc;"></div>
+
+<script>
+    var map = L.map('map', {
+        minZoom: 0, 
+        maxZoom: 5,
+        center: [0, 0], // Adjust based on image
+        zoom: 1,
+        crs: L.CRS.Simple
+    });
+
+    var w = 4000, h = 3000; // Replace with your image's actual dimensions
+    var bounds = [[0, 0], [h, w]];
+
+    // Load low-res image first
+    var image = L.imageOverlay("{{ url_for('static', filename='images/map_lowres.jpg') }}", bounds).addTo(map);
+    map.fitBounds(bounds);
+
+    // Swap with high-res image after the page loads
+    window.onload = function() {
+        image.setUrl("{{ url_for('static', filename='images/map.jpg') }}");
+    };
+</script>
 {% endblock %}

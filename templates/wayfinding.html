@@ -2,4 +2,45 @@
 {% block content %}
 <h1>Wayfinding</h1>
 <p>This page contains information about the University of Arkansas app.</p>
+
+<!-- Map Container -->
+<div id="map" style="width: 100%; height: 500px; border: 2px solid #ccc;"></div>
+
+<script>
+    // Initialize the map
+    var map = L.map('map', {
+        minZoom: 0, 
+        maxZoom: 5,
+        center: [0, 0], // Adjust based on image
+        zoom: 1,
+        crs: L.CRS.Simple
+    });
+
+    // Image dimensions (adjust these based on the actual image size)
+    var w = 4000, h = 3000; // Image size in pixels (adjust as needed)
+    var bounds = [[0, 0], [h, w]];
+
+    // Add the image overlay (your high-res map image)
+    var image = L.imageOverlay("{{ url_for('static', filename='images/map.jpg') }}", bounds).addTo(map);
+
+    // Fit the map to the image bounds
+    map.fitBounds(bounds);
+
+    // Add a marker for the entry point
+    var entryPoint = L.latLng(1000, 1500);  // Adjust the coordinates to the correct entry location (in image coordinates)
+
+    var marker = L.marker(entryPoint).addTo(map);
+    marker.bindPopup("Entry Point: Main Entrance");  // You can change the popup text
+
+    // Listen for click events on the map
+    map.on('click', function(e) {
+        var latlng = e.latlng; // Get the clicked coordinates in lat/lng
+        var imageCoordinates = map.latLngToContainerPoint(latlng); // Convert to image coordinates
+
+        // Output the coordinates to the console
+        console.log("Clicked Lat/Lng: ", latlng);
+        console.log("Relative Image Coordinates: ", imageCoordinates);
+    });
+</script>
+
 {% endblock %}
