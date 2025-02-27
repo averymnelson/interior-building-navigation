@@ -50,8 +50,11 @@ def main():
     # path = a_star(graph, 1, 3)
     # print(f"Path from Room 1 to Room 2: {path}")
 
-    path = a_star(graph, "1", "100")
-    print(f"Path from Room 1 to Room 100: {path}")
+    room1 = "4824"
+    room2 = "1004"
+
+    path = a_star(graph, room1, room2)
+    print(f"Path from Room {room1} to Room {room2}: {path}")
     
 
 if __name__ == "__main__":
