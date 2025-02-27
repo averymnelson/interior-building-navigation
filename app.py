@@ -27,6 +27,18 @@ def home():
 def wayfinding():
     return render_template('wayfinding.html', title="Wayfinding")
 
+@app.route('/get_directions', methods=['POST'])
+def get_directions():
+    start = request.form.get('start')
+    destination = request.form.get('destination')
+
+    if start and destination:
+        flash(f"Finding route from {start} to {destination}...", "info")
+        return redirect(url_for('wayfinding'))
+    else:
+        flash("Please enter both a starting point and a destination!", "danger")
+        return redirect(url_for('wayfinding'))
+    
 @app.route('/settings')
 def settings():
     return render_template('settings.html', title="Settings")
