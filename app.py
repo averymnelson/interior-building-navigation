@@ -1,6 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from PIL import Image
 import os
+import sqlite3
+import json
+
+from navigation_system.models.node import NavigationGraph
+from navigation_system.algorithms.pathfinding import a_star
+
+# Import new modules - ADD THESE LINES
+from navigation_system.models.decision_points import DecisionPointManager
+from navigation_system.utils.wifi_scanner import scan_wifi, get_dummy_wifi_data
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for flash messages

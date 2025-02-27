@@ -1,6 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
 
+<!-- Navigation Controls -->
+<div class="navigation-controls" style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">
+    <div class="row">
+        <div class="col-md-6">
+            <button id="locate-btn" class="btn btn-primary">Find My Location</button>
+            <span id="location-status" style="margin-left: 10px;">Your location: Unknown</span>
+        </div>
+        <div class="col-md-6">
+            <select id="destination-select" class="form-control">
+                <option value="">Select Destination...</option>
+                <!-- Will be populated with destinations -->
+            </select>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-12">
+            <div id="directions-panel" style="padding: 10px; background-color: white; border: 1px solid #ddd; display: none;">
+                <h5>Directions</h5>
+                <div id="directions-content">Select a destination to see directions</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Map Container -->
 <div id="map" style="width: 100%; height: 500px; border: 2px solid #ccc;">
     <script>
@@ -24,6 +48,14 @@
         // Fit the map to the image bounds
         map.fitBounds(bounds);
 
+        // Variables for navigation
+        var userMarker = null;
+        var pathLine = null;
+        var currentPosition = null;
+        var currentPath = [];
+        var decisionPoints = [];
+        var graph = {}; // Will store node data
+        
         // Add a marker for the entry point
         var entryPoint = L.latLng(1000, 1500);  // Adjust the coordinates to the correct entry location (in image coordinates)
 
