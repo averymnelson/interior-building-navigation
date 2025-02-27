@@ -5,6 +5,11 @@ body {
     background-color: #ffffff;
 }
 
+/* Default background color for map container (Apple Blossom)*/
+#map{
+    background: #ffffff;
+}
+
 /* Walking Directions Popup */
 .wayfinding-popup {
     background: #ffffff;
