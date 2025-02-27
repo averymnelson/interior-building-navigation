@@ -40,7 +40,7 @@ def a_star(graph: NavigationGraph, start_id: str, goal_id: str) -> List[str]:
         for neighbor_id, weight in current.connections:
             tentative_g_score = g_score[current_id] + weight
 
-            print(f"Checking neighbor {neighbor_id}, tentative_g_score: {tentative_g_score}")
+            #print(f"Checking neighbor {neighbor_id}, tentative_g_score: {tentative_g_score}")
             
             if tentative_g_score < g_score.get(neighbor_id, float('inf')):
                 neighbor = graph.nodes[neighbor_id]
