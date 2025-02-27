@@ -16,14 +16,9 @@
         var w = 800, h = 500; 
         var bounds = [[0, 0], [h, w]];
 
-        // Load low-res image first
-        var image = L.imageOverlay("{{ url_for('static', filename='images/map_lowres.jpg') }}", bounds).addTo(map);
+        
+        var image = L.imageOverlay("{{ url_for('static', filename='images/map.jpg') }}", bounds).addTo(map);
         map.fitBounds(bounds);
-
-        // Swap with high-res image after the page loads
-        window.onload = function() {
-            image.setUrl("{{ url_for('static', filename='images/map.jpg') }}");
-        };
     </script>
 </div>
 {% endblock %}
