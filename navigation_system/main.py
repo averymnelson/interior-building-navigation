@@ -1,5 +1,5 @@
-from models.node import NavigationGraph
-from algorithms.pathfinding import a_star
+from navigation_system.models.node import NavigationGraph
+from navigation_system.algorithms.pathfinding import a_star
 import csv
 
 def import_nodes(graph = NavigationGraph()):
