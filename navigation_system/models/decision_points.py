@@ -2,7 +2,7 @@
 import json
 import sqlite3
 from typing import Dict, Optional, List, Tuple
-from models.node import NavigationGraph
+from navigation_system.models.node import NavigationGraph
 
 class DecisionPointManager:
     """Manages decision points with WiFi fingerprints for indoor positioning"""

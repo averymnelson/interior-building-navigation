@@ -9,7 +9,7 @@ import os
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.wifi_scanner import scan_wifi
+from navigation_system.utils.wifi_scanner import scan_wifi
 
 class FingerprintCollector:
     """Tool for collecting WiFi fingerprints at decision points"""

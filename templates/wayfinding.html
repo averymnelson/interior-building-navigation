@@ -8,21 +8,22 @@
 <div class="map-container">
     <!-- Walking Path Search Box -->
     <div class="wayfinding-popup">
-        <p>Find a walking path between two locations</p>
+        <p>Find a walking path between two rooms</p>
         
-        <form action="{{ url_for('get_directions') }}" method="POST">
+        <form id="routeForm" action="{{ url_for('get_directions') }}" method="POST">
             <!-- Start Location Input -->
             <div class="input-group">
-                <!--<span class="icon-label">A</span>-->
                 <i class="bi bi-geo-alt-fill"></i>
-                <input type="text" name="start" placeholder="Search for a route starting point" required>
+                <input type="text" id="start-input" name="start" placeholder="Search for a route starting point" required>
+                <button type="button" id="locate-btn" class="btn btn-sm btn-primary ml-2" title="Find my location">
+                    <i class="bi bi-geo"></i>
+                </button>
             </div>
             
             <!-- Destination Input -->
             <div class="input-group">
-                <!--<span class="icon-label">B</span>-->
                 <i class="bi bi-geo-alt-fill"></i>
-                <input type="text" name="destination" placeholder="Search for a route destination" required>
+                <input type="text" id="destination-input" name="destination" placeholder="Search for a route destination" required>
             </div>
 
             <!-- Submit Button -->
@@ -30,8 +31,14 @@
         </form>
     </div>
 
+    <!-- Directions panel -->
+    <div id="directions-panel" style="padding: 10px; background-color: white; border: 1px solid #ddd; margin-top: 10px; display: none;">
+        <h5>Directions</h5>
+        <div id="directions-content">Select starting point and destination to see directions</div>
+    </div>
+
     <!-- Map Container -->
-    <div id="map"style="width: 100%; height: 500px; border: 2px solid #ccc;"></div>
+    <div id="map" style="width: 100%; height: 500px; border: 2px solid #ccc;"></div>
 </div>
 
 <script>
@@ -55,20 +62,422 @@
     // Fit the map to the image bounds
     map.fitBounds(bounds);
 
-    // Add a marker for the entry point
-    var entryPoint = L.latLng(1000, 1500);  // Adjust the coordinates to the correct entry location (in image coordinates)
+    // Variables for navigation
+    var userMarker = null;
+    var pathLine = null;
+    var currentPosition = null;
+    var currentPath = [];
+    var decisionPoints = [];
+    var roomMarkers = [];
+    var graph = {}; // Will store node data
+    var roomIdMap = {};
 
-    var marker = L.marker(entryPoint).addTo(map);
-    marker.bindPopup("Entry Point: Main Entrance");  // You can change the popup text
+    // Function to update user marker
+    function updateUserMarker(lat, lng, description, nodeId) {
+        if (userMarker) {
+            userMarker.setLatLng([lat, lng]);
+        } else {
+            userMarker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'user-marker',
+                    html: '<div style="background-color: blue; border-radius: 50%; width: 15px; height: 15px;"></div>',
+                    iconSize: [15, 15]
+                })
+            }).addTo(map);
+        }
+        
+        userMarker.bindPopup("Your location: " + (description || "Unknown")).openPopup();
+        
+        // Set the current position
+        currentPosition = nodeId;
+        
+        // Update the start location dropdown
+        if (nodeId) {
+            document.getElementById('start-select').value = nodeId;
+        }
+    }
 
-    // Listen for click events on the map
+    // Function to locate user via WiFi
+    async function locateUser() {
+        try {
+            // Show loading indicator
+            document.getElementById('locate-btn').innerHTML = '<i class="bi bi-hourglass-split"></i>';
+            
+            // In a real implementation, you'd scan WiFi here
+            // For now, we'll send a dummy request
+            const response = await fetch('/api/locate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    wifi_signals: {} // In a real app, would scan WiFi here
+                })
+            });
+            
+            // Reset button
+            document.getElementById('locate-btn').innerHTML = '<i class="bi bi-geo"></i>';
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update user position
+                updateUserMarker(parseFloat(data.y), parseFloat(data.x), data.description, data.node_id);
+                
+                // If a destination is selected, calculate route
+                const destination = document.getElementById('destination-select').value;
+                if (destination) {
+                    calculateRoute(currentPosition, destination);
+                }
+            } else {
+                alert('Location not found. Try again or select your location manually.');
+            }
+        } catch (error) {
+            console.error('Error locating user:', error);
+            document.getElementById('locate-btn').innerHTML = '<i class="bi bi-geo"></i>';
+            alert('Error locating. Please try again or select your location manually.');
+        }
+    }
+
+    // Function to calculate route from text inputs
+    async function calculateRouteFromText(startId, destinationText) {
+        // Find destination node ID from text
+        let destinationId = null;
+        
+        // First, check if the text is directly a node ID
+        if (graph[destinationText]) {
+            destinationId = destinationText;
+        } else {
+            // Otherwise, check if it's a room number
+            for (const [id, node] of Object.entries(graph)) {
+                // Match room number from node info
+                if (node.type === 'room' && id === destinationText) {
+                    destinationId = id;
+                    break;
+                }
+            }
+        }
+        
+        if (!destinationId) {
+            alert(`Cannot find location "${destinationText}". Please enter a valid room number.`);
+            return;
+        }
+        
+        // Call the route calculator with node IDs
+        await calculateRoute(startId, destinationId);
+    }
+
+    // Function to calculate route
+    async function calculateRoute(start, end) {
+        if (!start || !end) {
+            alert("Please select both a starting point and destination");
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/route', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    start: start,
+                    end: end
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Store current path
+                currentPath = data.path;
+                
+                // Clear previous path
+                if (pathLine) {
+                    map.removeLayer(pathLine);
+                }
+                
+                // Draw new path
+                const pathPoints = data.path_details.map(point => [parseFloat(point.y), parseFloat(point.x)]);
+                pathLine = L.polyline(pathPoints, {color: 'blue', weight: 5}).addTo(map);
+                
+                // Add markers for decision points
+                decisionPoints.forEach(marker => map.removeLayer(marker));
+                decisionPoints = [];
+                
+                data.path_details.forEach(point => {
+                    if (point.is_decision_point) {
+                        const marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
+                            radius: 8,
+                            fillColor: '#ff9800',
+                            color: '#000',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        }).addTo(map);
+                        
+                        marker.bindPopup(point.description || "Decision Point");
+                        decisionPoints.push(marker);
+                    }
+                });
+                
+                // Get next decision point for directions
+                getNextDecisionPoint(start, data.path);
+                
+                // Show directions panel
+                document.getElementById('directions-panel').style.display = 'block';
+                
+                // Fit map to include both user and destination
+                const bounds = pathLine.getBounds();
+                map.fitBounds(bounds, {padding: [50, 50]});
+            } else {
+                alert("No path found between these locations. Please try different points.");
+            }
+        } catch (error) {
+            console.error('Error calculating route:', error);
+            alert("Error calculating route. Please try again.");
+        }
+    }
+
+    // Function to get next decision point for directions
+    async function getNextDecisionPoint(current, path) {
+        try {
+            const response = await fetch('/api/next-decision-point', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    current: current,
+                    path: path
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('directions-content').innerHTML = 
+                    `<p>Proceed to: <strong>${data.description}</strong></p>`;
+                    
+                // Highlight this decision point
+                decisionPoints.forEach(marker => {
+                    const nodeY = parseFloat(graph[data.node_id]?.y || 0);
+                    const nodeX = parseFloat(graph[data.node_id]?.x || 0);
+                    
+                    if (marker._latlng.lat == nodeY && marker._latlng.lng == nodeX) {
+                        marker.setStyle({fillColor: '#4CAF50'});
+                    }
+                });
+            } else {
+                document.getElementById('directions-content').innerHTML = 
+                    '<p>Continue to your destination</p>';
+            }
+        } catch (error) {
+            console.error('Error getting next decision point:', error);
+            document.getElementById('directions-content').innerHTML = 
+                '<p>Error getting directions. Please try again.</p>';
+        }
+    }
+
+    // Load locations on page load
+    async function loadLocations() {
+        try {
+            const response = await fetch('/api/nodes');
+            const nodes = await response.json();
+            
+            // Store graph data
+            graph = nodes;
+            
+            for (const [id, node] of Object.entries(nodes)) {
+                if (node.type === 'room') {
+                    roomIdMap[id] = id; // Map room ID to itself for lookup
+                    
+                    // Add room marker to map
+                    const roomMarker = L.circleMarker([parseFloat(node.y), parseFloat(node.x)], {
+                        radius: 6,
+                        fillColor: '#3388ff',
+                        color: '#000',
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.6
+                    }).addTo(map);
+                    
+                    roomMarker.bindPopup(node.type_name || `Room ${id}`);
+                    roomMarkers.push(roomMarker);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading locations:', error);
+            alert('Error loading locations. Please refresh the page.');
+        }
+    }
+
+    // Manual position selection when clicking on map
     map.on('click', function(e) {
-        var latlng = e.latlng; // Get the clicked coordinates in lat/lng
-        var imageCoordinates = map.latLngToContainerPoint(latlng); // Convert to image coordinates
-
-        // Output the coordinates to the console
-        console.log("Clicked Lat/Lng: ", latlng);
-        console.log("Relative Image Coordinates: ", imageCoordinates);
+        // Find closest node to click
+        let closest = null;
+        let minDist = Infinity;
+        
+        for (const [id, node] of Object.entries(graph)) {
+            const dist = Math.sqrt(
+                Math.pow(e.latlng.lat - parseFloat(node.y), 2) + 
+                Math.pow(e.latlng.lng - parseFloat(node.x), 2)
+            );
+            
+            if (dist < minDist) {
+                minDist = dist;
+                closest = id;
+            }
+        }
+        
+        if (closest) {
+            const node = graph[closest];
+            updateUserMarker(
+                parseFloat(node.y), 
+                parseFloat(node.x), 
+                node.type_name || `${node.type} ${closest}`,
+                closest
+            );
+            
+            // If destination is entered, calculate route
+            const destination = document.getElementById('destination-input').value;
+            if (destination) {
+                calculateRouteFromText(closest, destination);
+            }
+        }
     });
+
+    // Event listeners
+    document.getElementById('locate-btn').addEventListener('click', locateUser);
+    
+    document.getElementById('routeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const start = document.getElementById('start-input').value;
+        const destination = document.getElementById('destination-input').value;
+        
+        if (currentPosition) {
+            // If we already have a current position, use that as the start
+            calculateRouteFromText(currentPosition, destination);
+        } else {
+            // Otherwise, resolve both start and destination text
+            let startId = null;
+            
+            // Try to find the start node ID from text
+            if (graph[start]) {
+                startId = start;
+            } else {
+                // Otherwise, check if it's a room number
+                for (const [id, node] of Object.entries(graph)) {
+                    // Match room number from node info
+                    if (node.type === 'room' && id === start) {
+                        startId = id;
+                        break;
+                    }
+                }
+            }
+            
+            if (!startId) {
+                alert(`Cannot find location "${start}". Please enter a valid room number.`);
+                return;
+            }
+            
+            calculateRouteFromText(startId, destination);
+        }
+    });
+
+    // Visualize all graph edges for debugging
+    function visualizeGraphEdges() {
+        for (const [nodeId, node] of Object.entries(graph)) {
+            // We don't have connection info in the node data from API
+            // You would need to request this separately 
+            // This is just a placeholder for debugging
+            if (node.connections) {
+                for (const [connectedId, weight] of node.connections) {
+                    const connectedNode = graph[connectedId];
+                    if (connectedNode) {
+                        L.polyline([
+                            [parseFloat(node.y), parseFloat(node.x)],
+                            [parseFloat(connectedNode.y), parseFloat(connectedNode.x)]
+                        ], {
+                            color: 'red',
+                            weight: 1,
+                            opacity: 0.5,
+                            dashArray: '5, 5'
+                        }).addTo(map);
+                    }
+                }
+            }
+        }
+    }
+
+    // Initialize
+    loadLocations();
+    // var entryPoint = L.latLng(1000, 1500);  // Adjust the coordinates to the correct entry location (in image coordinates)
+
+    // var marker = L.marker(entryPoint).addTo(map);
+    // marker.bindPopup("Entry Point: Main Entrance");  // You can change the popup text
+
+    // // Listen for click events on the map
+    // map.on('click', function(e) {
+    //     var latlng = e.latlng; // Get the clicked coordinates in lat/lng
+    //     var imageCoordinates = map.latLngToContainerPoint(latlng); // Convert to image coordinates
+
+    //     // Output the coordinates to the console
+    //     console.log("Clicked Lat/Lng: ", latlng);
+    //     console.log("Relative Image Coordinates: ", imageCoordinates);
+    // });
+
+    // Manual position selection when clicking on map
+    // map.on('click', function(e) {
+    //     // Find closest node to click
+    //     let closest = null;
+    //     let minDist = Infinity;
+        
+    //     for (const [id, node] of Object.entries(graph)) {
+    //         const dist = Math.sqrt(
+    //             Math.pow(e.latlng.lat - parseFloat(node.y), 2) + 
+    //             Math.pow(e.latlng.lng - parseFloat(node.x), 2)
+    //         );
+            
+    //         if (dist < minDist) {
+    //             minDist = dist;
+    //             closest = id;
+    //         }
+    //     }
+        
+    //     if (closest) {
+    //         const node = graph[closest];
+    //         updateUserMarker(
+    //             parseFloat(node.y), 
+    //             parseFloat(node.x), 
+    //             node.type_name || `${node.type} ${closest}`,
+    //             closest
+    //         );
+            
+    //         // If destination is selected, calculate route
+    //         const destination = document.getElementById('destination-select').value;
+    //         if (destination) {
+    //             calculateRoute(closest, destination);
+    //         }
+    //     }
+    // });
+
+    // // Event listeners
+    // document.getElementById('locate-btn').addEventListener('click', locateUser);
+    
+    // document.getElementById('routeForm').addEventListener('submit', function(e) {
+    //     e.preventDefault();
+    //     const start = document.getElementById('start-select').value;
+    //     const destination = document.getElementById('destination-select').value;
+        
+    //     if (start && destination) {
+    //         calculateRoute(start, destination);
+    //     } else {
+    //         alert('Please select both a starting point and destination.');
+    //     }
+    // });
+
+    // // Initialize
+    // loadLocations();
 </script>
 {% endblock %}

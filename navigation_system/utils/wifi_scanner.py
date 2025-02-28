@@ -134,7 +134,6 @@ def _scan_macos() -> Dict[str, float]:
         print(f"Error scanning WiFi on macOS: {e}")
         return {}
         
-# For web-based usage (where direct WiFi scanning is restricted)
 def get_dummy_wifi_data():
     """
     Get dummy WiFi data for testing or when real scanning is not available
