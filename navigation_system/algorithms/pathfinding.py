@@ -1,6 +1,6 @@
 from typing import Dict, List, Set, Tuple
 import heapq
-from models.node import NavigationGraph, Node
+from navigation_system.models.node import NavigationGraph, Node
 
 def heuristic(node: Node, goal: Node) -> float:
     return ((float(node.x) - float(goal.x))**2 + (float(node.y) - float(goal.y))**2)**0.5
