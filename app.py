@@ -1,37 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from navigation_system.models.node import NavigationGraph
+from navigation_system.algorithms.pathfinding import a_star
+from navigation_system.models.decision_points import DecisionPointManager
+from navigation_system.utils.wifi_scanner import scan_wifi, get_dummy_wifi_data
 from PIL import Image
 import os
 import sqlite3
 import json
 import csv
-
-from navigation_system.models.node import NavigationGraph
-from navigation_system.algorithms.pathfinding import a_star
-
-# Import new modules - ADD THESE LINES
-from navigation_system.models.decision_points import DecisionPointManager
-from navigation_system.utils.wifi_scanner import scan_wifi, get_dummy_wifi_data
-
-app = Flask(__name__)
-app.secret_key = "your_secret_key"  # Required for flash messages
-
-# Dummy credentials
-USER_CREDENTIALS = {
-    "admin": "password123"
-}
-
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-import os
-import sqlite3
-import json
-import csv
-
-# Import your existing modules
-from navigation_system.models.node import NavigationGraph
-from navigation_system.algorithms.pathfinding import a_star
-
-# Import new modules
-from navigation_system.utils.wifi_scanner import scan_wifi, get_dummy_wifi_data
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for flash messages
@@ -49,7 +25,6 @@ graph = NavigationGraph()
 
 # Load graph from CSV files
 def load_graph_from_csv():
-    # print(f"entered load graph from csv")
     # Load nodes
     nodes_path = os.path.join(os.path.dirname(__file__), 'navigation_system\point_table.csv')
     if os.path.exists(nodes_path):
@@ -62,7 +37,6 @@ def load_graph_from_csv():
     
     # Load edges
     edges_path = os.path.join(os.path.dirname(__file__), 'navigation_system\edge_table.csv')
-    # print(f"entered load edge from csv")
     if os.path.exists(edges_path):
         with open(edges_path, 'r') as csvfile:
             csvreader = csv.reader(csvfile)

@@ -19,6 +19,7 @@
         
         var image = L.imageOverlay("{{ url_for('static', filename='images/map.jpg') }}", bounds).addTo(map);
         map.fitBounds(bounds);
+        map.setMaxBounds(bounds);
     </script>
 </div>
 {% endblock %}
