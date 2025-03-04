@@ -49,7 +49,7 @@ graph = NavigationGraph()
 
 # Load graph from CSV files
 def load_graph_from_csv():
-    print(f"entered load graph from csv")
+    # print(f"entered load graph from csv")
     # Load nodes
     nodes_path = os.path.join(os.path.dirname(__file__), 'navigation_system\point_table.csv')
     if os.path.exists(nodes_path):
@@ -57,25 +57,20 @@ def load_graph_from_csv():
             csvreader = csv.reader(csvfile)
             next(csvreader)  # Skip header
             for row in csvreader:
-                print(f"entered row in csvreader")
                 if len(row) >= 4:
-                    print(f"length of row passes, adding node")
                     graph.add_node(row[0], row[1], 1, row[2], row[3])
     
     # Load edges
     edges_path = os.path.join(os.path.dirname(__file__), 'navigation_system\edge_table.csv')
-    print(f"entered load edge from csv")
+    # print(f"entered load edge from csv")
     if os.path.exists(edges_path):
         with open(edges_path, 'r') as csvfile:
             csvreader = csv.reader(csvfile)
             next(csvreader)  # Skip header
             for row in csvreader:
-                print(f"entered row in csvreader edges")
                 if len(row) >= 3:
-                    print(f"length of row passes")
                     try:
                         graph.add_edge(row[1], row[2])
-                        print(f"adding node")
                     except KeyError:
                         print(f"Warning: Could not add edge between {row[1]} and {row[2]} - nodes not found")
 
