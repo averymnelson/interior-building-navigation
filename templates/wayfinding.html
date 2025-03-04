@@ -61,6 +61,7 @@
 
     // Fit the map to the image bounds
     map.fitBounds(bounds);
+    map.setMaxBounds(bounds);
 
     // Variables for navigation
     var userMarker = null;
@@ -412,72 +413,5 @@
 
     // Initialize
     loadLocations();
-    // var entryPoint = L.latLng(1000, 1500);  // Adjust the coordinates to the correct entry location (in image coordinates)
-
-    // var marker = L.marker(entryPoint).addTo(map);
-    // marker.bindPopup("Entry Point: Main Entrance");  // You can change the popup text
-
-    // // Listen for click events on the map
-    // map.on('click', function(e) {
-    //     var latlng = e.latlng; // Get the clicked coordinates in lat/lng
-    //     var imageCoordinates = map.latLngToContainerPoint(latlng); // Convert to image coordinates
-
-    //     // Output the coordinates to the console
-    //     console.log("Clicked Lat/Lng: ", latlng);
-    //     console.log("Relative Image Coordinates: ", imageCoordinates);
-    // });
-
-    // Manual position selection when clicking on map
-    // map.on('click', function(e) {
-    //     // Find closest node to click
-    //     let closest = null;
-    //     let minDist = Infinity;
-        
-    //     for (const [id, node] of Object.entries(graph)) {
-    //         const dist = Math.sqrt(
-    //             Math.pow(e.latlng.lat - parseFloat(node.y), 2) + 
-    //             Math.pow(e.latlng.lng - parseFloat(node.x), 2)
-    //         );
-            
-    //         if (dist < minDist) {
-    //             minDist = dist;
-    //             closest = id;
-    //         }
-    //     }
-        
-    //     if (closest) {
-    //         const node = graph[closest];
-    //         updateUserMarker(
-    //             parseFloat(node.y), 
-    //             parseFloat(node.x), 
-    //             node.type_name || `${node.type} ${closest}`,
-    //             closest
-    //         );
-            
-    //         // If destination is selected, calculate route
-    //         const destination = document.getElementById('destination-select').value;
-    //         if (destination) {
-    //             calculateRoute(closest, destination);
-    //         }
-    //     }
-    // });
-
-    // // Event listeners
-    // document.getElementById('locate-btn').addEventListener('click', locateUser);
-    
-    // document.getElementById('routeForm').addEventListener('submit', function(e) {
-    //     e.preventDefault();
-    //     const start = document.getElementById('start-select').value;
-    //     const destination = document.getElementById('destination-select').value;
-        
-    //     if (start && destination) {
-    //         calculateRoute(start, destination);
-    //     } else {
-    //         alert('Please select both a starting point and destination.');
-    //     }
-    // });
-
-    // // Initialize
-    // loadLocations();
 </script>
 {% endblock %}
