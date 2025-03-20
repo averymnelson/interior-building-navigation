@@ -57,7 +57,7 @@
     var bounds = [[0, 0], [h, w]];
 
     // Add the image overlay (your high-res map image)
-    var image = L.imageOverlay("{{ url_for('static', filename='images/testMap.jpg') }}", bounds).addTo(map);
+    var image = L.imageOverlay("{{ url_for('static', filename='images/map.jpg') }}", bounds).addTo(map);
 
     // Fit the map to the image bounds
     map.fitBounds(bounds);
