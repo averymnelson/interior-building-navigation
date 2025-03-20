@@ -53,7 +53,7 @@
     });
 
     // Image dimensions (adjust these based on the actual image size)
-    var w = 800, h = 500; // Image size in pixels (adjust as needed)
+    var w = 783, h = 595; // Image size in pixels (adjust as needed)
     var bounds = [[0, 0], [h, w]];
 
     // Add the image overlay (your high-res map image)
@@ -168,77 +168,77 @@
         await calculateRoute(startId, destinationId);
     }
 
-    // Function to calculate route
-    async function calculateRoute(start, end) {
-        if (!start || !end) {
-            alert("Please select both a starting point and destination");
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/route', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+  // Function to calculate route
+async function calculateRoute(start, end) {
+    if (!start || !end) {
+        alert("Please select both a starting point and destination");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/route', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
                 body: JSON.stringify({
                     start: start,
                     end: end
                 })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                // Store current path
-                currentPath = data.path;
-                
-                // Clear previous path
-                if (pathLine) {
-                    map.removeLayer(pathLine);
-                }
-                
-                // Draw new path
-                const pathPoints = data.path_details.map(point => [parseFloat(point.y), parseFloat(point.x)]);
-                pathLine = L.polyline(pathPoints, {color: 'blue', weight: 5}).addTo(map);
-                
-                // Add markers for decision points
-                decisionPoints.forEach(marker => map.removeLayer(marker));
-                decisionPoints = [];
-                
-                data.path_details.forEach(point => {
-                    if (point.is_decision_point) {
-                        const marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
-                            radius: 8,
-                            fillColor: '#ff9800',
-                            color: '#000',
-                            weight: 1,
-                            opacity: 1,
-                            fillOpacity: 0.8
-                        }).addTo(map);
-                        
-                        marker.bindPopup(point.description || "Decision Point");
-                        decisionPoints.push(marker);
-                    }
-                });
-                
-                // Get next decision point for directions
-                getNextDecisionPoint(start, data.path);
-                
-                // Show directions panel
-                document.getElementById('directions-panel').style.display = 'block';
-                
-                // Fit map to include both user and destination
-                const bounds = pathLine.getBounds();
-                map.fitBounds(bounds, {padding: [50, 50]});
-            } else {
-                alert("No path found between these locations. Please try different points.");
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Store current path
+            currentPath = data.path;
+
+            // Clear previous path
+            if (pathLine) {
+                map.removeLayer(pathLine);
             }
-        } catch (error) {
-            console.error('Error calculating route:', error);
-            alert("Error calculating route. Please try again.");
+
+            // Draw new path
+                const pathPoints = data.path_details.map(point => [parseFloat(point.y) + 76, parseFloat(point.x) + 140]); //shift route points
+                pathLine = L.polyline(pathPoints, {color: 'blue', weight: 5}).addTo(map);
+
+                // Add markers for decision points
+            decisionPoints.forEach(marker => map.removeLayer(marker));
+            decisionPoints = [];
+
+            data.path_details.forEach(point => {
+                if (point.is_decision_point) {
+                        const marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
+                        radius: 8,
+                        fillColor: '#ff9800',
+                        color: '#000',
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(map);
+
+                    marker.bindPopup(point.description || "Decision Point");
+                    decisionPoints.push(marker);
+                }
+            });
+
+            // Get next decision point for directions
+            getNextDecisionPoint(start, data.path);
+
+            // Show directions panel
+            document.getElementById('directions-panel').style.display = 'block';
+
+            // Fit map to include both user and destination
+            const bounds = pathLine.getBounds();
+                map.fitBounds(bounds, {padding: [50, 50]});
+        } else {
+            alert("No path found between these locations. Please try different points.");
         }
+    } catch (error) {
+        console.error('Error calculating route:', error);
+        alert("Error calculating route. Please try again.");
     }
+}
 
     // Function to get next decision point for directions
     async function getNextDecisionPoint(current, path) {
@@ -280,8 +280,7 @@
         }
     }
 
-    // Load locations on page load
-    async function loadLocations() {
+        async function loadLocations() {
         try {
             const response = await fetch('/api/nodes');
             const nodes = await response.json();
@@ -292,11 +291,17 @@
             for (const [id, node] of Object.entries(nodes)) {
                 if (node.type === 'room') {
                     roomIdMap[id] = id; // Map room ID to itself for lookup
-                    
-                    // Add room marker to map
-                    const roomMarker = L.circleMarker([parseFloat(node.y), parseFloat(node.x)], {
+                    const adjustedX = parseFloat(node.x) + 140; // Shift left by 50 units
+                    const adjustedY = parseFloat(node.y) + 76; // Shift up by 56 units
+
+                    // Update the node's coordinates in the graph with adjusted values
+                    graph[id].x = adjustedX;
+                    graph[id].y = adjustedY;
+
+                    // Add room marker to map with adjusted coordinates
+                    const roomMarker = L.circleMarker([adjustedY, adjustedX], {
                         radius: 6,
-                        fillColor: '#3388ff',
+                        fillColor: '#CC0000',
                         color: '#000',
                         weight: 1,
                         opacity: 1,
@@ -312,6 +317,8 @@
             alert('Error loading locations. Please refresh the page.');
         }
     }
+
+
 
     // Manual position selection when clicking on map
     map.on('click', function(e) {
