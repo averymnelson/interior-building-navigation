@@ -17,6 +17,11 @@ body {
     height: 500px;
 }
 
+/* Hide the Wayfinding checkbox */
+.toggle-popup-checkbox {
+    display: none;
+}
+
 /* To Position the search box at the top of the map */
 .wayfinding-popup {
     position: absolute;
@@ -30,6 +35,25 @@ body {
     width: 90%;
     max-width: 400px;
     z-index: 1000;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+/* Wayfinding Popup Initially visible */
+.toggle-popup-checkbox:checked ~ .wayfinding-popup {
+    display: none;
+}
+
+/* Find New Route Button */
+.find-route-btn {
+    display: block;
+    background-color:#9D2235;
+    color: white;
+    padding: 3px;
+    text-align: center;
+    cursor: pointer;
+    width: 150px;
+    border-radius: 5px;
+    /* margin: 5px; */
 }
 
 /* Input Group */

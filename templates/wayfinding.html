@@ -6,6 +6,9 @@
 </head>
 
 <div class="map-container">
+    <!-- Hidden Checkbox for Controlling Popup Visibility -->
+    <input type="checkbox" id="toggle-popup" class="toggle-popup-checkbox">
+
     <!-- Walking Path Search Box -->
     <div class="wayfinding-popup">
         <p>Find a walking path between two rooms</p>
@@ -27,7 +30,9 @@
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="get-directions">Get Directions</button>
+            <button type="submit" class="get-directions" onclick="document.getElementById('toggle-popup').checked = true;">
+                Get Directions
+            </button>
         </form>
     </div>
 
@@ -35,6 +40,9 @@
     <div id="directions-panel" style="padding: 10px; background-color: white; border: 1px solid #ddd; margin-top: 10px; display: none;">
         <h5>Directions</h5>
         <div id="directions-content">Select starting point and destination to see directions</div>
+        
+        <!-- New Route Button -->
+        <label for="toggle-popup" class="find-route-btn">Find New Route</label>
     </div>
 
     <!-- Map Container -->
