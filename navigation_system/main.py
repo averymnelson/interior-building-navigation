@@ -70,4 +70,6 @@ def main():
     
     
 
-if __name__ == "__mai
+if __name__ == "__main__":
+    main()
+    
