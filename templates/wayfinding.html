@@ -36,17 +36,19 @@
         </form>
     </div>
 
-    <!-- Directions panel -->
-    <div id="directions-panel" style="padding: 10px; background-color: white; border: 1px solid #ddd; margin-top: 10px; display: none;">
-        <h5>Directions</h5>
-        <div id="directions-content">Select starting point and destination to see directions</div>
-        
+    <!-- Map Container -->
+    <div id="map" style="width: 100%; height: 500px; border: 2px solid #ccc;"></div>
+
+    <!-- Directions Panel -->
+    <input type="checkbox" id="toggle-panel" class="toggle-panel-checkbox" hidden>
+    <div id="directions-panel">
+        <label for="toggle-panel" class="drag-handle"><i class="arrow-icon"></i></label> <!-- Clicking expands/collapses -->
+        <h3>Directions</h3>
+        <div id="directions-content" style ="margin-bottom: 10px">Select starting point and destination to see directions</div>
+
         <!-- New Route Button -->
         <label for="toggle-popup" class="find-route-btn">Find New Route</label>
     </div>
-
-    <!-- Map Container -->
-    <div id="map" style="width: 100%; height: 500px; border: 2px solid #ccc;"></div>
 </div>
 
 <script>
