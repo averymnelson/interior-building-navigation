@@ -176,7 +176,7 @@
         await calculateRoute(startId, destinationId);
     }
 
-  // Function to calculate route
+// Function to calculate route
 async function calculateRoute(start, end) {
     if (!start || !end) {
         alert("Please select both a starting point and destination");
@@ -189,10 +189,10 @@ async function calculateRoute(start, end) {
             headers: {
                 'Content-Type': 'application/json'
             },
-                body: JSON.stringify({
-                    start: start,
-                    end: end
-                })
+            body: JSON.stringify({
+                start: start,
+                end: end
+            })
         });
 
         const data = await response.json();
@@ -206,17 +206,22 @@ async function calculateRoute(start, end) {
                 map.removeLayer(pathLine);
             }
 
-            // Draw new path
-                const pathPoints = data.path_details.map(point => [parseFloat(point.y) + 76, parseFloat(point.x) + 140]); //shift route points
-                pathLine = L.polyline(pathPoints, {color: 'blue', weight: 5}).addTo(map);
+            // Convert path points and apply shift
+            const pathPoints = data.path_details.map(point => [
+                parseFloat(point.y) + 76, 
+                parseFloat(point.x) + 140
+            ]);
 
-                // Add markers for decision points
+            // Animate drawing of path
+            animatePolyline(pathPoints);
+
+            // Add markers for decision points
             decisionPoints.forEach(marker => map.removeLayer(marker));
             decisionPoints = [];
 
             data.path_details.forEach(point => {
                 if (point.is_decision_point) {
-                        const marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
+                    const marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
                         radius: 8,
                         fillColor: '#ff9800',
                         color: '#000',
@@ -235,10 +240,6 @@ async function calculateRoute(start, end) {
 
             // Show directions panel
             document.getElementById('directions-panel').style.display = 'block';
-
-            // Fit map to include both user and destination
-            const bounds = pathLine.getBounds();
-                map.fitBounds(bounds, {padding: [50, 50]});
         } else {
             alert("No path found between these locations. Please try different points.");
         }
@@ -247,6 +248,30 @@ async function calculateRoute(start, end) {
         alert("Error calculating route. Please try again.");
     }
 }
+
+// Function to animate polyline drawing
+function animatePolyline(pathPoints) {
+    let index = 0;
+    let animatedPath = [];
+    
+    function drawNextSegment() {
+        if (index < pathPoints.length) {
+            animatedPath.push(pathPoints[index]);
+            if (pathLine) {
+                map.removeLayer(pathLine);
+            }
+            pathLine = L.polyline(animatedPath, { color: 'blue', weight: 5 }).addTo(map);
+            index++;
+            setTimeout(drawNextSegment, 100); // Adjust speed by changing timeout value
+        } else {
+            // Fit map to final path
+            map.fitBounds(pathLine.getBounds(), { padding: [50, 50] });
+        }
+    }
+
+    drawNextSegment();
+}
+
 
     // Function to get next decision point for directions
     async function getNextDecisionPoint(current, path) {
@@ -325,8 +350,6 @@ async function calculateRoute(start, end) {
             alert('Error loading locations. Please refresh the page.');
         }
     }
-
-
 
     // Manual position selection when clicking on map
     map.on('click', function(e) {
