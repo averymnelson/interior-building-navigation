@@ -202,6 +202,7 @@ async function calculateRoute(start, end) {
         if (data.success) {
             // Store current path
             currentPath = data.path;
+            instructions = data.instructions;
 
             // Clear previous path
             if (pathLine) {
@@ -240,8 +241,8 @@ async function calculateRoute(start, end) {
             // Get next decision point for directions
             getNextDecisionPoint(start, data.path);
 
-            // Show directions panel
-            document.getElementById('directions-panel').style.display = 'block';
+            // Populate directions panel
+            updateDirectionsPanel(instructions);
         } else {
             alert("No path found between these locations. Please try different points.");
         }
@@ -249,6 +250,36 @@ async function calculateRoute(start, end) {
         console.error('Error calculating route:', error);
         alert("Error calculating route. Please try again.");
     }
+}
+
+// Function to update the directions panel with formatted instructions
+function updateDirectionsPanel(instructions) {
+    let directionsContent = document.getElementById("directions-content");
+    directionsContent.innerHTML = ""; // Clear previous directions
+
+    instructions.forEach((step, index) => {
+        let stepDiv = document.createElement("div");
+        stepDiv.classList.add("direction-step");
+
+        // Determine arrow direction based on instruction text
+        let icon = "";
+        if (step.includes("right")) {
+            icon = "↱"; // Right turn icon
+        } else if (step.includes("left")) {
+            icon = "↰"; // Left turn icon
+        } else if (step.includes("forward")) {
+            icon = "↑"; // Forward arrow icon
+        }
+
+        stepDiv.innerHTML = `
+            <div class="direction-icon">${icon}</div>
+            <div class="direction-text">
+                <strong>${step.split(":")[0]}</strong> <!-- e.g., "Turn Right" -->
+                <div>${step.split(":")[1]}</div> <!-- e.g., "37 feet" -->
+            </div>
+        `;
+        directionsContent.appendChild(stepDiv);
+    });
 }
 
 // Function to animate polyline drawing
@@ -291,10 +322,7 @@ function animatePolyline(pathPoints) {
             
             const data = await response.json();
             
-            if (data.success) {
-                document.getElementById('directions-content').innerHTML = 
-                    `<p>Proceed to: <strong>${data.description}</strong></p>`;
-                    
+            if (data.success) {    
                 // Highlight this decision point
                 decisionPoints.forEach(marker => {
                     const nodeY = parseFloat(graph[data.node_id]?.y || 0);
