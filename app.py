@@ -26,7 +26,7 @@ graph = NavigationGraph()
 # Load graph from CSV files
 def load_graph_from_csv():
     # Load nodes
-    nodes_path = os.path.join(os.path.dirname(__file__), r'navigation_system\point_table.csv')
+    nodes_path = os.path.join(os.path.dirname(__file__), 'navigation_system\point_table.csv')
     if os.path.exists(nodes_path):
         with open(nodes_path, 'r') as csvfile:
             csvreader = csv.reader(csvfile)
@@ -36,7 +36,7 @@ def load_graph_from_csv():
                     graph.add_node(row[0], row[1], 1, row[2], row[3])
     
     # Load edges
-    edges_path = os.path.join(os.path.dirname(__file__), r'navigation_system\edge_table.csv')
+    edges_path = os.path.join(os.path.dirname(__file__), 'navigation_system\edge_table.csv')
     if os.path.exists(edges_path):
         with open(edges_path, 'r') as csvfile:
             csvreader = csv.reader(csvfile)
