@@ -6,6 +6,19 @@
 </head>
 
 <div class="map-container">
+    <!-- Dropdown menu -->
+    <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            Select Option
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <li><a class="dropdown-item" href="#">Option 1</a></li>
+            <li><a class="dropdown-item" href="#">Option 2</a></li>
+            <li><a class="dropdown-item" href="#">Option 3</a></li>
+        </ul>
+    </div>
+
+<div class="map-container">
     <!-- Hidden Checkbox for Controlling Popup Visibility -->
     <input type="checkbox" id="toggle-popup" class="toggle-popup-checkbox">
 
@@ -26,8 +39,14 @@
             <!-- Destination Input -->
             <div class="input-group">
                 <i class="bi bi-geo-alt-fill"></i>
-                <input type="text" id="destination-input" name="destination" placeholder="Search for a route destination" required>
+                <input type="text" id="destination-input" name="destination" placeholder="Search for a route destination" required list="destination-list">
             </div>
+
+            <!-- Datalist containing predefined options -->
+            <datalist id="destination-list">
+                <option value="Restroom">
+                <!-- Add more options as needed -->
+            </datalist>
 
             <!-- Submit Button -->
             <button type="submit" class="get-directions" onclick="document.getElementById('toggle-popup').checked = true;">
