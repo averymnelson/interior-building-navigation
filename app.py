@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from navigation_system.models.node import NavigationGraph
 from navigation_system.algorithms.pathfinding import a_star
+from navigation_system.algorithms.pathfinding import find_restroom
 from navigation_system.models.decision_points import DecisionPointManager
 from navigation_system.utils.wifi_scanner import scan_wifi, get_dummy_wifi_data
 from navigation_system.algorithms.step_instructions import get_navigation_instructions
@@ -256,6 +257,50 @@ def api_calculate_route():
         'path_details': path_details,
         'instructions': instructions
     })
+
+@app.route('/api/restroom-route', methods=['POST'])
+def api_calculate_restroom_route():
+    """Calculate route between two points"""
+    data = request.json
+    start_id = data.get('start')
+    # end_id = data.get('end')
+    
+    if start_id not in graph.nodes:
+        return jsonify({'success': False, 'error': 'Invalid start node'})
+    
+    path = find_restroom(graph, start_id)
+    
+    instructions = get_navigation_instructions(graph, path)
+    print("\nNavigation Instructions:")
+    for i, instruction in enumerate(instructions, 1):
+        print(f"Step {i}: {instruction}")
+    
+    if not path:
+        return jsonify({'success': False, 'error': 'No path found'})
+    
+    # Convert to coordinates for display
+    path_details = []
+    for node_id in path:
+        node = graph.nodes[node_id]
+        is_dp = is_decision_point(node_id)
+        
+        node_info = {
+            'node_id': node_id,
+            'x': node.x,
+            'y': node.y,
+            'is_decision_point': is_dp,
+            'description': get_decision_point_info(node_id)['description'] if get_decision_point_info(node_id) else f"{node.type_name} {node_id}"
+        }
+            
+        path_details.append(node_info)
+    
+    return jsonify({
+        'success': True,
+        'path': path,
+        'path_details': path_details,
+        'instructions': instructions
+    })
+
 
 @app.route('/api/next-decision-point', methods=['POST'])
 def api_get_next_decision_point():
