@@ -72,4 +72,4 @@ def find_restroom(graph: NavigationGraph, room_id: str):
                 shortest_restroom_id = restroom_id
 
     print(f"Path from Room {room_id} to Restroom {shortest_restroom_id}: {shortest_path}")
-    return shortest_path
+    return str(shortest_restroom_id)

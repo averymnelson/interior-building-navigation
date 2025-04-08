@@ -175,8 +175,28 @@
         let destinationId = null;
         
         // First, check if the text is directly a node ID
-        if (graph[destinationText] || destinationText == 'Restroom') {
+        if (graph[destinationText]) {
             destinationId = destinationText;
+        }else if(destinationText == 'Restroom'){
+            try{
+                const response = await fetch('/api/get-restroom', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    startId: startId
+                })
+                });
+                const data = await response.json();
+                if (data.success) {
+                destinationId = data.end;
+                }
+
+            }catch(error) {
+                console.error('Error calculating restroomID:', error);
+                alert("Error calculating route. Please try again.");
+            }
         } else {
             // Otherwise, check if it's a room number
             for (const [id, node] of Object.entries(graph)) {
@@ -205,17 +225,6 @@ async function calculateRoute(start, end) {
     }
 
     try {
-        if(end == 'Restroom'){
-            const response = await fetch('/api/restroom-route', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                start: start
-            })
-        });
-        }else{
             const response = await fetch('/api/route', {
             method: 'POST',
             headers: {
@@ -226,8 +235,6 @@ async function calculateRoute(start, end) {
                 end: end
             })
         });
-        }
-
         const data = await response.json();
 
         if (data.success) {
