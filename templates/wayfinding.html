@@ -112,30 +112,30 @@
             document.getElementById('start-select').value = nodeId;
         }
     }
-    async function loadRoomDescriptions() {
-        try {
-            const response = await fetch('/get-room-descriptions');
-            const data = await response.json();
+    // async function loadRoomDescriptions() {
+    //     try {
+    //         const response = await fetch('/get-room-descriptions');
+    //         const data = await response.json();
 
-            if (data.error) {
-                console.error("Error fetching room descriptions:", data.error);
-                return;
-            }
+    //         if (data.error) {
+    //             console.error("Error fetching room descriptions:", data.error);
+    //             return;
+    //         }
 
-            const datalist = document.getElementById('destination-list');
-            // Clear existing options
-            datalist.innerHTML = '';
+    //         const datalist = document.getElementById('destination-list');
+    //         // Clear existing options
+    //         datalist.innerHTML = '';
 
-            // Add each room description as an option in the datalist
-            data.forEach(room => {
-                const option = document.createElement('option');
-                option.value = room.space_description;
-                datalist.appendChild(option);
-            });
-        } catch (error) {
-            console.error("Error loading room descriptions:", error);
-        }
-    }
+    //         // Add each room description as an option in the datalist
+    //         data.forEach(room => {
+    //             const option = document.createElement('option');
+    //             option.value = room.space_description;
+    //             datalist.appendChild(option);
+    //         });
+    //     } catch (error) {
+    //         console.error("Error loading room descriptions:", error);
+    //     }
+    // }
 
     // Function to locate user via WiFi
     async function locateUser() {
