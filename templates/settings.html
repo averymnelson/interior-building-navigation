@@ -34,8 +34,8 @@
     <div class="modal-content">
         <span class="close" onclick="document.getElementById('loginModal').style.display='none'">&times;</span>
         <form action="{{ url_for('login') }}" method="POST">
-            <label for="username">username</label>
-            <input type="text" id="username" name="username" required>
+            <label for="email">email</label>
+            <input type="text" id="email" name="email" required>
 
             <label for="password">password</label>
             <input type="password" id="password" name="password" required>
