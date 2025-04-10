@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from navigation_system.models.node import NavigationGraph
 from navigation_system.algorithms.pathfinding import a_star
-from navigation_system.algorithms.pathfinding import find_restroom
 from navigation_system.models.decision_points import DecisionPointManager
 from navigation_system.utils.wifi_scanner import scan_wifi, get_dummy_wifi_data
 from navigation_system.algorithms.step_instructions import get_navigation_instructions
 from PIL import Image
+from supabase import create_client, Client
 import os
 import sqlite3
 import json
@@ -26,30 +26,27 @@ DB_PATH = os.path.join(os.path.dirname(__file__), 'navigation.db')
 graph = NavigationGraph()
 
 # Load graph from CSV files
+url = "https://rbuwdtslfurengikxkcm.supabase.co"
+key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJidXdkdHNsZnVyZW5naWt4a2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg5NDQ1NjQsImV4cCI6MjA1NDUyMDU2NH0.uQ5XQ2om0Jvy4vhY3g1SKTUfDlE6Y3uMgiiyp3slD5k"
+
+supabase: Client = create_client(url, key)
+
+nodes = supabase.table("Point Table").select("*").execute()
+
+edges = supabase.table("Edge Table").select("*").execute()
+
+# Load graph from CSV files
 def load_graph_from_csv():
     # Load nodes
-    nodes_path = os.path.join(os.path.dirname(__file__), 'navigation_system/point_table.csv')
-    if os.path.exists(nodes_path):
-        with open(nodes_path, 'r') as csvfile:
-            csvreader = csv.reader(csvfile)
-            next(csvreader)  # Skip header
-            for row in csvreader:
-                if len(row) >= 4:
-                    graph.add_node(row[0], row[1], 1, row[2], row[3])
-    
+    for data in nodes.data:
+        graph.add_node(data['pointnum'], data['type'],1, data['x_position'],data['y_position'])
+   
     # Load edges
-    edges_path = os.path.join(os.path.dirname(__file__), 'navigation_system/edge_table.csv')
-    if os.path.exists(edges_path):
-        with open(edges_path, 'r') as csvfile:
-            csvreader = csv.reader(csvfile)
-            next(csvreader)  # Skip header
-            for row in csvreader:
-                if len(row) >= 3:
-                    try:
-                        graph.add_edge(row[1], row[2])
-                    except KeyError:
-                        print(f"Warning: Could not add edge between {row[1]} and {row[2]} - nodes not found")
-
+    for data in edges.data:
+        try:
+            graph.add_edge(data['pointnum1'], data['pointnum2'])
+        except KeyError:
+            print(f"Warning: Could not add edge between {data['pointnum1']} and {data['pointnum2']} - nodes not found")
 # If CSV files don't exist, create test data
 def create_test_graph():
     # Add some test nodes
@@ -256,23 +253,6 @@ def api_calculate_route():
         'path': path,
         'path_details': path_details,
         'instructions': instructions
-    })
-
-@app.route('/api/get-restroom', methods=['POST'])
-def api_get_restroom():
-    """Get restroom room ID for destination ID"""
-    data = request.json
-    start_id = data.get('startId')
-    
-    if start_id not in graph.nodes:
-        return jsonify({'success': False, 'error': 'Invalid start node'})
-    
-    end = find_restroom(graph, start_id)
-    if not end:
-        return jsonify({'success': False, 'error': 'No restroom found'})
-    return jsonify({
-        'success': True,
-        'end': end
     })
 
 @app.route('/api/next-decision-point', methods=['POST'])
