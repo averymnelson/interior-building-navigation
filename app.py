@@ -7,7 +7,7 @@ from navigation_system.utils.wifi_scanner import scan_wifi, get_dummy_wifi_data
 from navigation_system.algorithms.step_instructions import get_navigation_instructions
 from PIL import Image
 from dotenv import load_dotenv
-import supabase
+from supabase import create_client, Client
 import os
 import sqlite3
 import json
@@ -19,6 +19,7 @@ app.secret_key = "your_secret_key"  # Required for flash messages
 load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Dummy credentials
 USER_CREDENTIALS = {
@@ -84,16 +85,27 @@ except Exception as e:
 # In a real app, these would be loaded from a database
 decision_points = {}  # Format: {node_id: {'description': str, 'fingerprint': {bssid: rssi}}}
 
-# @app.route('/get-room-descriptions')
-# def get_room_descriptions():
-#     # Fetch space descriptions from the 'Room Info' table
-#     response = supabase.table('Room Info').select('space_description').execute()
+@app.route('/get-room-descriptions')
+def get_room_descriptions():
+    # Fetch space descriptions from the 'Room Info' table
+    response = supabase.table('Room Info Table').select('space_description').execute()
 
-#     if response.status_code == 200:
-#         return jsonify(response.data)
-#     else:
-#         return jsonify({'success': False, "error": "Unable to fetch data"}), 400
+    if response:
+        return jsonify(response.data)
+    else:
+        return jsonify({'success': False, "error": "Unable to fetch data"}), 400
 
+@app.route('/get-room_number', methods=['POST'])
+def get_room_number():
+    data = request.json
+    room_description = data.get('destinationText')
+    response = supabase.table('Room Info Table').select('room_number').eq('space_description', room_description).execute()
+
+    if response:
+        return jsonify(response.data)
+    else:
+        return jsonify({room_description})
+    
 # Function to get decision point info
 def get_decision_point_info(node_id):
     if node_id in decision_points:

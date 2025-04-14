@@ -78,6 +78,8 @@
     map.fitBounds(bounds);
     map.setMaxBounds(bounds);
 
+    //load room aliases from database
+    loadRoomDescriptions();
     // Variables for navigation
     var userMarker = null;
     var pathLine = null;
@@ -112,30 +114,30 @@
             document.getElementById('start-select').value = nodeId;
         }
     }
-    // async function loadRoomDescriptions() {
-    //     try {
-    //         const response = await fetch('/get-room-descriptions');
-    //         const data = await response.json();
+    async function loadRoomDescriptions() {
+        try {
+            const response = await fetch('/get-room-descriptions');
+            const data = await response.json();
 
-    //         if (data.error) {
-    //             console.error("Error fetching room descriptions:", data.error);
-    //             return;
-    //         }
+            if (data.error) {
+                console.error("Error fetching room descriptions:", data.error);
+                return;
+            }
 
-    //         const datalist = document.getElementById('destination-list');
-    //         // Clear existing options
-    //         datalist.innerHTML = '';
+            const datalist = document.getElementById('destination-list');
+            // Clear existing options
+            datalist.innerHTML = '';
 
-    //         // Add each room description as an option in the datalist
-    //         data.forEach(room => {
-    //             const option = document.createElement('option');
-    //             option.value = room.space_description;
-    //             datalist.appendChild(option);
-    //         });
-    //     } catch (error) {
-    //         console.error("Error loading room descriptions:", error);
-    //     }
-    // }
+            // Add each room description as an option in the datalist
+            data.forEach(room => {
+                const option = document.createElement('option');
+                option.value = room.space_description;
+                datalist.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error loading room descriptions:", error);
+        }
+    }
 
     // Function to locate user via WiFi
     async function locateUser() {
@@ -183,7 +185,25 @@
     async function calculateRouteFromText(startId, destinationText) {
         // Find destination node ID from text
         let destinationId = null;
-        
+        try{
+                const response = await fetch('/api/get-room_number', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    destinationText: destinationText
+                })
+                });
+                const data = await response.json();
+                if (data.success) {
+                destinationId = data.end;
+                }
+
+            }catch(error) {
+                console.error('Error finding roomID:', error);
+                alert("Error finding the room number. Please try again.");
+            }
         // First, check if the text is directly a node ID
         if (graph[destinationText]) {
             destinationId = destinationText;
@@ -207,7 +227,7 @@
                 console.error('Error calculating restroomID:', error);
                 alert("Error calculating route. Please try again.");
             }
-        } else {
+        }else{
             // Otherwise, check if it's a room number
             for (const [id, node] of Object.entries(graph)) {
                 // Match room number from node info
