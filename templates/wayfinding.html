@@ -204,6 +204,7 @@
                 console.error('Error finding roomID:', error);
                 alert("Error finding the room number. Please try again.");
             }
+
         // First, check if the text is directly a node ID
         if (graph[destinationText]) {
             destinationId = destinationText;
@@ -221,14 +222,16 @@
                 const data = await response.json();
                 if (data.success) {
                 destinationId = data.end;
-                }
+                }else {
+                throw new Error(data.message || "Room not found");
+                 }
 
             }catch(error) {
                 console.error('Error calculating restroomID:', error);
                 alert("Error calculating route. Please try again.");
             }
         }else{
-            // Otherwise, check if it's a room number
+            //Otherwise, check if it's a room number
             for (const [id, node] of Object.entries(graph)) {
                 // Match room number from node info
                 if (node.type === 'room' && id === destinationText) {
@@ -236,6 +239,25 @@
                     break;
                 }
             }
+            // try{
+            //     const response = await fetch('/api/get-room_number', {
+            //     method: 'POST',
+            //     headers: {
+            //     'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify({
+            //         destinationText: destinationText
+            //     })
+            //     });
+            //     const data = await response.json();
+            //     if (data.success) {
+            //     destinationId = data.end;
+            //     }
+
+            // }catch(error) {
+            //     console.error('Error finding roomID:', error);
+            //     alert("Error finding the room number. Please try again.");
+            // }
         }
         
         if (!destinationId) {

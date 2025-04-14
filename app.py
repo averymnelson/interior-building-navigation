@@ -95,16 +95,23 @@ def get_room_descriptions():
     else:
         return jsonify({'success': False, "error": "Unable to fetch data"}), 400
 
-@app.route('/get-room_number', methods=['POST'])
+@app.route('/api/get-room_number', methods=['POST'])
 def get_room_number():
     data = request.json
     room_description = data.get('destinationText')
-    response = supabase.table('Room Info Table').select('room_number').eq('space_description', room_description).execute()
+    # response = supabase.table('Room Info Table').select('room_number').eq('space_description', room_description).execute()
 
-    if response:
-        return jsonify(response.data)
+    # if response:
+    #     return jsonify(response.data)
+    # else:
+    #     return jsonify({room_description})
+
+    response = supabase.table('Room Info Table').select('room_number').eq('space_description', room_description).execute()
+    print(response.data[0]['room_number'])
+    if response.data:
+        return jsonify({"success": True, "end": str(response.data[0]['room_number'])})
     else:
-        return jsonify({room_description})
+        return jsonify({"success": False, "message": f"No room found for description '{room_description}'"})
     
 # Function to get decision point info
 def get_decision_point_info(node_id):
