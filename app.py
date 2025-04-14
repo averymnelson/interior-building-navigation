@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-# from supabase import create_client, Client
 from navigation_system.models.node import NavigationGraph
 from navigation_system.algorithms.pathfinding import a_star
 from navigation_system.algorithms.pathfinding import find_restroom
@@ -7,6 +6,8 @@ from navigation_system.models.decision_points import DecisionPointManager
 from navigation_system.utils.wifi_scanner import scan_wifi, get_dummy_wifi_data
 from navigation_system.algorithms.step_instructions import get_navigation_instructions
 from PIL import Image
+from dotenv import load_dotenv
+import supabase
 import os
 import sqlite3
 import json
@@ -15,9 +16,9 @@ import csv
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for flash messages
 
-# url = "https://rbuwdtslfurengikxkcm.supabase.co"
-# key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJidXdkdHNsZnVyZW5naWt4a2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg5NDQ1NjQsImV4cCI6MjA1NDUyMDU2NH0.uQ5XQ2om0Jvy4vhY3g1SKTUfDlE6Y3uMgiiyp3slD5k"
-# supabase: Client = create_client(url, key)
+load_dotenv()
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 # Dummy credentials
 USER_CREDENTIALS = {
