@@ -105,7 +105,7 @@ body {
 
 /* Expand when checkbox is checked */
 .toggle-panel-checkbox:checked ~ #directions-panel {
-    max-height: 300px; /* Expanded size */
+    max-height: 250px; /* Expanded size */
     overflow-y: auto;
 }
 
