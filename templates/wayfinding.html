@@ -11,13 +11,13 @@
 
     <!-- Walking Path Search Box -->
     <div class="wayfinding-popup">
-        <p>Find a walking path between two rooms</p>
+        <p>Find a walking route</p>
         
         <form id="routeForm" action="{{ url_for('get_directions') }}" method="POST">
             <!-- Start Location Input -->
             <div class="input-group">
                 <i class="bi bi-geo-alt-fill"></i>
-                <input type="text" id="start-input" name="start" placeholder="Search for a route starting point" required>
+                <input type="text" id="start-input" name="start" placeholder="Search for start point" required>
                 <button type="button" id="locate-btn" class="btn btn-sm btn-primary ml-2" title="Find my location">
                     <i class="bi bi-geo"></i>
                 </button>
@@ -26,7 +26,7 @@
             <!-- Destination Input -->
             <div class="input-group">
                 <i class="bi bi-geo-alt-fill"></i>
-                <input type="text" id="destination-input" name="destination" placeholder="Search for a route destination" required>
+                <input type="text" id="destination-input" name="destination" placeholder="Search for destination" required>
             </div>
 
             <!-- Submit Button -->
