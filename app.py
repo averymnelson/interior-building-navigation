@@ -8,13 +8,25 @@ from navigation_system.algorithms.step_instructions import get_navigation_instru
 from PIL import Image
 from supabase import create_client, Client
 
+from dotenv import load_dotenv
 import os
 import sqlite3
 import json
 import csv
+import supabase
+
+# Load environment variables from .env file
+load_dotenv()
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for flash messages
+
+# Initialize Supabase client
+supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Dummy credentials
 USER_CREDENTIALS = {
@@ -352,15 +364,20 @@ def settings():
 
 @app.route('/login', methods=['POST'])
 def login():
-    username = request.form.get('username')
+    email = request.form.get('email')
     password = request.form.get('password')
 
-    if username in USER_CREDENTIALS and USER_CREDENTIALS[username] == password:
+    try:
+        response = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
+    
+        print(f"[INFO] Login successful for {email}")
         flash("Login successful!", "success")
         return redirect(url_for('home'))
-    else:
+
+    except Exception as e:
+        print(f"[WARNING] Login failed for: {email}")
         flash("Invalid credentials!", "danger")
         return redirect(url_for('settings'))
-    
+
 if __name__ == '__main__':
     app.run(debug=True)
