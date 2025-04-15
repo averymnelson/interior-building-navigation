@@ -210,7 +210,28 @@ def api_locate_user():
         })
     
     return jsonify({'success': False, 'error': 'Unable to locate user'})
+@app.route('/get-room-descriptions')
+def get_room_descriptions():
+    # Fetch space descriptions from the 'Room Info' table
+    response = supabase_client.from_('Room Info Table').select('space_description').execute()
 
+    if response:
+        return jsonify(response.data)
+    else:
+        return jsonify({'success': False, "error": "Unable to fetch data"}), 400
+
+@app.route('/api/get-room_number', methods=['POST'])
+def get_room_number():
+    data = request.json
+    room_description = data.get('destinationText')
+    response = supabase_client.from_('Room Info Table') \
+        .select('room_number') \
+        .eq('space_description', room_description) \
+        .execute()
+    if response.data:
+        return jsonify({"success": True, "end": str(response.data[0]['room_number'])})
+    else:
+        return jsonify({"success": False, "message": f"No room found for description '{room_description}'"})
 @app.route('/api/nodes')
 def api_get_nodes():
     """Get all nodes in the graph"""
