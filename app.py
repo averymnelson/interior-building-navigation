@@ -348,18 +348,17 @@ def login():
     email = request.form.get('email')
     password = request.form.get('password')
 
-    response = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
+    try:
+        response = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
     
-    if response.user and response.session:
         print(f"[INFO] Login successful for {email}")
-        if email == ADMIN_EMAIL:
-            flash("Login successful!", "success")
-            return redirect(url_for('home'))
+        flash("Login successful!", "success")
+        return redirect(url_for('home'))
 
-    else:
-        print(f"[WARNING] Login failed for: {email} - Reason: {response.get('error', 'Unknown error')}")
-    flash("Invalid credentials!", "danger")
-    return redirect(url_for('settings'))
-    
+    except Exception as e:
+        print(f"[WARNING] Login failed for: {email}")
+        flash("Invalid credentials!", "danger")
+        return redirect(url_for('settings'))
+
 if __name__ == '__main__':
     app.run(debug=True)
