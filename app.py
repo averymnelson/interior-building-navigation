@@ -50,17 +50,28 @@ nodes = supabase.table("Point Table").select("*").execute()
 edges = supabase.table("Edge Table").select("*").execute()
 
 # Load graph from CSV files
+# Modified load_graph_from_csv function to debug hallway information
 def load_graph_from_csv():
     # Load nodes
     for data in nodes.data:
-        graph.add_node(data['pointnum'], data['type'],1, data['x_position'],data['y_position'])
+        graph.add_node(data['pointnum'], data['type'], 1, data['x_position'], data['y_position'])
    
+    # Debug: Print the first few edge records to verify hallway column
+    print("Checking Edge Table data structure:")
+    if edges.data and len(edges.data) > 0:
+        sample_edge = edges.data[0]
+        print(f"Sample edge data: {sample_edge}")
+        print(f"Hallway field exists: {'hallway' in sample_edge}")
+        if 'hallway' in sample_edge:
+            print(f"Hallway value: {sample_edge['hallway']}")
+    
     # Load edges
     for data in edges.data:
         try:
             graph.add_edge(data['pointnum1'], data['pointnum2'])
         except KeyError:
             print(f"Warning: Could not add edge between {data['pointnum1']} and {data['pointnum2']} - nodes not found")
+
 # If CSV files don't exist, create test data
 def create_test_graph():
     # Add some test nodes
@@ -232,13 +243,31 @@ def api_calculate_route():
     data = request.json
     start_id = data.get('start')
     end_id = data.get('end')
-    print(start_id)
-    print(end_id)
+    prefer_hallways = data.get('prefer_hallways', True)  # Default to preferring hallways
+    
+    print(f"Calculating route from {start_id} to {end_id}, prefer_hallways={prefer_hallways}")
     
     if start_id not in graph.nodes or end_id not in graph.nodes:
         return jsonify({'success': False, 'error': 'Invalid start or end node'})
     
-    path = a_star(graph, start_id, end_id)
+    # Ensure we're getting the complete edge data
+    try:
+        # Fetch the latest edge data directly from the database to ensure we have hallway information
+        latest_edges = supabase.table("Edge Table").select("*").execute()
+        edges_data = latest_edges.data
+        print(f"Fetched {len(edges_data)} edges for pathfinding")
+        
+        # Debug: check if hallway column exists
+        if edges_data and len(edges_data) > 0:
+            sample_edge = edges_data[0]
+            print(f"Sample edge data: {sample_edge}")
+            print(f"Hallway field exists: {'hallway' in sample_edge}")
+    except Exception as e:
+        print(f"Error fetching edge data: {e}")
+        edges_data = edges.data  # Fall back to the original data
+    
+    # Pass the edges data to A* for hallway preference routing
+    path = a_star(graph, start_id, end_id, edges_data, prefer_hallways)
     
     instructions = get_navigation_instructions(graph, path)
     print("\nNavigation Instructions:")
