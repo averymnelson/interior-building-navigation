@@ -31,7 +31,7 @@
 
             <!-- Datalist containing predefined options -->
             <datalist id="destination-list">
-
+                <option value="Restroom"></option>
             </datalist>
 
             <!-- Submit Button -->
@@ -125,8 +125,13 @@
             }
 
             const datalist = document.getElementById('destination-list');
-            // Clear existing options
-            datalist.innerHTML = '';
+            
+            // Sort alphabetically by space_description (case-insensitive)
+            data.sort((a, b) => {
+                const descA = a.space_description.toLowerCase();
+                const descB = b.space_description.toLowerCase();
+                return descA.localeCompare(descB);
+            });
 
             // Add each room description as an option in the datalist
             data.forEach(room => {
@@ -185,30 +190,11 @@
     async function calculateRouteFromText(startId, destinationText) {
         // Find destination node ID from text
         let destinationId = null;
-        try{
-                const response = await fetch('/api/get-room_number', {
-                method: 'POST',
-                headers: {
-                'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    destinationText: destinationText
-                })
-                });
-                const data = await response.json();
-                if (data.success) {
-                destinationId = data.end;
-                }
-
-            }catch(error) {
-                console.error('Error finding roomID:', error);
-                alert("Error finding the room number. Please try again.");
-            }
 
         // First, check if the text is directly a node ID
         if (graph[destinationText]) {
             destinationId = destinationText;
-        }else if(destinationText == 'Restroom'){
+        }else if(destinationText.toLowerCase() === 'restroom' || destinationText.toLowerCase() === 'bathroom'){
             try{
                 const response = await fetch('/api/get-restroom', {
                 method: 'POST',
@@ -231,33 +217,35 @@
                 alert("Error calculating route. Please try again.");
             }
         }else{
-            //Otherwise, check if it's a room number
+            //check if it's a room number
             for (const [id, node] of Object.entries(graph)) {
                 // Match room number from node info
                 if (node.type === 'room' && id === destinationText) {
                     destinationId = id;
-                    break;
+                    break
                 }
             }
-            // try{
-            //     const response = await fetch('/api/get-room_number', {
-            //     method: 'POST',
-            //     headers: {
-            //     'Content-Type': 'application/json'
-            //     },
-            //     body: JSON.stringify({
-            //         destinationText: destinationText
-            //     })
-            //     });
-            //     const data = await response.json();
-            //     if (data.success) {
-            //     destinationId = data.end;
-            //     }
+            //check if it is a room description
+            if(!destinationId){
+                try{
+                const response = await fetch('/api/get-room_number', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    destinationText: destinationText
+                })
+                });
+                const data = await response.json();
+                if (data.success) {
+                destinationId = data.end;
+                }
 
-            // }catch(error) {
-            //     console.error('Error finding roomID:', error);
-            //     alert("Error finding the room number. Please try again.");
-            // }
+            }catch(error) {
+                console.error('Error finding room:', error);
+            }
+            }
         }
         
         if (!destinationId) {

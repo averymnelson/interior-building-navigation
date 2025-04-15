@@ -99,13 +99,6 @@ def get_room_descriptions():
 def get_room_number():
     data = request.json
     room_description = data.get('destinationText')
-    # response = supabase.table('Room Info Table').select('room_number').eq('space_description', room_description).execute()
-
-    # if response:
-    #     return jsonify(response.data)
-    # else:
-    #     return jsonify({room_description})
-
     response = supabase.table('Room Info Table').select('room_number').eq('space_description', room_description).execute()
     print(response.data[0]['room_number'])
     if response.data:
@@ -285,7 +278,7 @@ def api_calculate_route():
         }
             
         path_details.append(node_info)
-    
+
     return jsonify({
         'success': True,
         'path': path,
