@@ -140,10 +140,6 @@
 
             // Add each room description as an option in the datalist
             data.forEach(room => {
-                // const option = document.createElement('option');
-                // option.value = room.space_description;
-                // startDatalist.appendChild(option);
-                // endDatalist.appendChild(option);
                 const startOption = document.createElement('option');
                 startOption.value = room.space_description;
                 startDatalist.appendChild(startOption);
@@ -202,6 +198,7 @@
 
     // Function to calculate route from text inputs
     async function calculateRouteFromText(startText, destinationText) {
+       //check startID
         let startId = null;
         if (graph[startText]) {
             startId = startText;
@@ -552,38 +549,10 @@ function animatePolyline(pathPoints) {
         const start = document.getElementById('start-input').value;
         const destination = document.getElementById('destination-input').value;
         
-        // if (currentPosition) {
-        //     // If we already have a current position, use that as the start
-        //     calculateRouteFromText(currentPosition, destination);
-        // }else 
         if(start){
             calculateRouteFromText(start, destination);
         }
-        // else {
-        //     // Otherwise, resolve both start and destination text
-        //     let startId = null;
-            
-        //     // Try to find the start node ID from text
-        //     if (graph[start]) {
-        //         startId = start;
-        //     } else {
-        //         // Otherwise, check if it's a room number
-        //         for (const [id, node] of Object.entries(graph)) {
-        //             // Match room number from node info
-        //             if (node.type === 'room' && id === start) {
-        //                 startId = id;
-        //                 break;
-        //             }
-        //         }
-        //     }
-            
-        //     if (!startId) {
-        //         alert(`Cannot find location "${start}". Please enter a valid room number.`);
-        //         return;
-        //     }
-            
-        //     calculateRouteFromText(startId, destination);
-        // }
+
     });
 
     // Visualize all graph edges for debugging
