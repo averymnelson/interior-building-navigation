@@ -349,23 +349,17 @@ def login():
     password = request.form.get('password')
 
     response = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
-    print(response)
-    user = response.user
+    
+    if response.user and response.session:
+        print(f"[INFO] Login successful for {email}")
+        if email == ADMIN_EMAIL:
+            flash("Login successful!", "success")
+            return redirect(url_for('home'))
 
-    if user and email == ADMIN_EMAIL:
-        flash("Login successful!", "success")
-        return redirect(url_for('home'))
     else:
-        flash("Invalid credentials!", "danger")
-        return redirect(url_for('settings'))
-
-
-    #if username in USER_CREDENTIALS and USER_CREDENTIALS[username] == password:
-    #    flash("Login successful!", "success")
-    #    return redirect(url_for('home'))
-    #else:
-    #    flash("Invalid credentials!", "danger")
-    #    return redirect(url_for('settings'))
+        print(f"[WARNING] Login failed for: {email} - Reason: {response.get('error', 'Unknown error')}")
+    flash("Invalid credentials!", "danger")
+    return redirect(url_for('settings'))
     
 if __name__ == '__main__':
     app.run(debug=True)
