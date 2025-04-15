@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from navigation_system.models.node import NavigationGraph
 from navigation_system.algorithms.pathfinding import a_star
+from navigation_system.algorithms.pathfinding import find_restroom
 from navigation_system.models.decision_points import DecisionPointManager
 from navigation_system.utils.wifi_scanner import scan_wifi, get_dummy_wifi_data
 from navigation_system.algorithms.step_instructions import get_navigation_instructions
 from PIL import Image
 from supabase import create_client, Client
+
 import os
 import sqlite3
 import json
@@ -218,6 +220,8 @@ def api_calculate_route():
     data = request.json
     start_id = data.get('start')
     end_id = data.get('end')
+    print(start_id)
+    print(end_id)
     
     if start_id not in graph.nodes or end_id not in graph.nodes:
         return jsonify({'success': False, 'error': 'Invalid start or end node'})
@@ -253,6 +257,23 @@ def api_calculate_route():
         'path': path,
         'path_details': path_details,
         'instructions': instructions
+    })
+
+@app.route('/api/get-restroom', methods=['POST'])
+def api_get_restroom():
+    """Get restroom room ID for destination ID"""
+    data = request.json
+    start_id = data.get('startId')
+    
+    if start_id not in graph.nodes:
+        return jsonify({'success': False, 'error': 'Invalid start node'})
+    
+    end = find_restroom(graph, start_id)
+    if not end:
+        return jsonify({'success': False, 'error': 'No restroom found'})
+    return jsonify({
+        'success': True,
+        'end': end
     })
 
 @app.route('/api/next-decision-point', methods=['POST'])
