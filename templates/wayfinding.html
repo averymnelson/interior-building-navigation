@@ -211,7 +211,7 @@ async function calculateRoute(start, end) {
 
             // Convert path points and apply shift
             const pathPoints = data.path_details.map(point => [
-                parseFloat(point.y) + 76, 
+                parseFloat(point.y) + 73, 
                 parseFloat(point.x) + 140
             ]);
 
@@ -354,8 +354,8 @@ function animatePolyline(pathPoints) {
             for (const [id, node] of Object.entries(nodes)) {
                 if (node.type === 'room') {
                     roomIdMap[id] = id; // Map room ID to itself for lookup
-                    const adjustedX = parseFloat(node.x) + 140; // Shift left by 50 units
-                    const adjustedY = parseFloat(node.y) + 76; // Shift up by 56 units
+                    const adjustedX = parseFloat(node.x) + 140; // Shift left by 140 units
+                    const adjustedY = parseFloat(node.y) + 73; // Shift up by 76 units
 
                     // Update the node's coordinates in the graph with adjusted values
                     graph[id].x = adjustedX;
