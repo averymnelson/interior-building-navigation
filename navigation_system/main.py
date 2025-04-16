@@ -49,6 +49,7 @@ def main():
     for i, instruction in enumerate(instructions, 1):
         print(f"Step {i}: {instruction}")
 
+
 if __name__ == "__main__":
     main()
     
