@@ -92,7 +92,6 @@
     var pathLine = null;
     var currentPosition = null;
     var currentPath = [];
-    var decisionPoints = [];
     var roomMarkers = [];
     var graph = {}; // Will store node data
     var roomIdMap = {};
@@ -164,9 +163,7 @@
         try {
             // Show loading indicator
             document.getElementById('locate-btn').innerHTML = '<i class="bi bi-hourglass-split"></i>';
-            
-            // In a real implementation, you'd scan WiFi here
-            // For now, we'll send a dummy request
+
             const response = await fetch('/api/locate', {
                 method: 'POST',
                 headers: {
@@ -347,31 +344,6 @@ async function calculateRoute(start, end) {
 
             // Animate drawing of path
             animatePolyline(pathPoints);
-
-            // Add markers for decision points
-            decisionPoints.forEach(marker => map.removeLayer(marker));
-            decisionPoints = [];
-
-            data.path_details.forEach(point => {
-                if (point.is_decision_point) {
-                    const marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
-                        radius: 8,
-                        fillColor: '#ff9800',
-                        color: '#000',
-                        weight: 1,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    }).addTo(map);
-
-                    marker.bindPopup(point.description || "Decision Point");
-                    decisionPoints.push(marker);
-                }
-            });
-
-            // Get next decision point for directions
-            getNextDecisionPoint(start, data.path);
-
-            // Populate directions panel
             updateDirectionsPanel(instructions);
         } else {
             alert("No path found between these locations. Please try different points.");
@@ -434,44 +406,6 @@ function animatePolyline(pathPoints) {
 
     drawNextSegment();
 }
-
-
-    // Function to get next decision point for directions
-    async function getNextDecisionPoint(current, path) {
-        try {
-            const response = await fetch('/api/next-decision-point', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    current: current,
-                    path: path
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {    
-                // Highlight this decision point
-                decisionPoints.forEach(marker => {
-                    const nodeY = parseFloat(graph[data.node_id]?.y || 0);
-                    const nodeX = parseFloat(graph[data.node_id]?.x || 0);
-                    
-                    if (marker._latlng.lat == nodeY && marker._latlng.lng == nodeX) {
-                        marker.setStyle({fillColor: '#4CAF50'});
-                    }
-                });
-            } else {
-                document.getElementById('directions-content').innerHTML = 
-                    '<p>Continue to your destination</p>';
-            }
-        } catch (error) {
-            console.error('Error getting next decision point:', error);
-            document.getElementById('directions-content').innerHTML = 
-                '<p>Error getting directions. Please try again.</p>';
-        }
-    }
 
         async function loadLocations() {
         try {
@@ -562,9 +496,7 @@ function animatePolyline(pathPoints) {
     // Visualize all graph edges for debugging
     function visualizeGraphEdges() {
         for (const [nodeId, node] of Object.entries(graph)) {
-            // We don't have connection info in the node data from API
-            // You would need to request this separately 
-            // This is just a placeholder for debugging
+            // placeholder for debugging
             if (node.connections) {
                 for (const [connectedId, weight] of node.connections) {
                     const connectedNode = graph[connectedId];
