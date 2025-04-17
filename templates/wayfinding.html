@@ -11,13 +11,13 @@
 
     <!-- Walking Path Search Box -->
     <div class="wayfinding-popup">
-        <p>Find a walking path between two rooms</p>
+        <p>Find a walking route</p>
         
         <form id="routeForm" action="{{ url_for('get_directions') }}" method="POST">
             <!-- Start Location Input -->
             <div class="input-group">
                 <i class="bi bi-geo-alt-fill"></i>
-                <input type="text" id="start-input" name="start" placeholder="Search for a route starting point" required list="start-list">
+                <input type="text" id="start-input" name="start" placeholder="Search for start point" required list="start-list">
                 <button type="button" id="locate-btn" class="btn btn-sm btn-primary ml-2" title="Find my location">
                     <i class="bi bi-geo"></i>
                 </button>
@@ -31,7 +31,7 @@
             <!-- Destination Input -->
             <div class="input-group">
                 <i class="bi bi-geo-alt-fill"></i>
-                <input type="text" id="destination-input" name="destination" placeholder="Search for a route destination" required list="destination-list">
+                <input type="text" id="destination-input" name="destination" placeholder="Search for destination" required list="destination-list">    
             </div>
 
             <!-- Datalist containing predefined options -->
@@ -341,7 +341,7 @@ async function calculateRoute(start, end) {
 
             // Convert path points and apply shift
             const pathPoints = data.path_details.map(point => [
-                parseFloat(point.y) + 76, 
+                parseFloat(point.y) + 73, 
                 parseFloat(point.x) + 140
             ]);
 
@@ -484,8 +484,8 @@ function animatePolyline(pathPoints) {
             for (const [id, node] of Object.entries(nodes)) {
                 if (node.type === 'room') {
                     roomIdMap[id] = id; // Map room ID to itself for lookup
-                    const adjustedX = parseFloat(node.x) + 140; // Shift left by 50 units
-                    const adjustedY = parseFloat(node.y) + 76; // Shift up by 56 units
+                    const adjustedX = parseFloat(node.x) + 140; // Shift left by 140 units
+                    const adjustedY = parseFloat(node.y) + 73; // Shift up by 76 units
 
                     // Update the node's coordinates in the graph with adjusted values
                     graph[id].x = adjustedX;
