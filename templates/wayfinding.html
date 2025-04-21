@@ -205,20 +205,18 @@
     async function calculateRouteFromText(startText, destinationText) {
        //check startID
         let startId = null;
-        if (graph[startText]) {
-            startId = startText;
-        }else{
-            //check if it's a room number
-            for (const [id, node] of Object.entries(graph)) {
-                // Match room number from node info
-                if (node.type === 'room' && id === startText) {
-                    startId = id;
-                    break
-                }
+        
+        //check if it's a room number
+        for (const [id, node] of Object.entries(graph)) {
+            // Match room number from node info
+            if (node.type === 'room' && id === startText) {
+                startId = id;
+                break
             }
-            //check if it is a room description
-            if(!startId){
-                try{
+        }
+        //check if it is a room description
+        if(!startId){
+            try{
                 const response = await fetch('/api/get-room_number', {
                 method: 'POST',
                 headers: {
@@ -237,16 +235,13 @@
                 console.error('Error finding room:', error);
                 alert(`Cannot find location "${startText}". Please enter a valid room number.`);
             }
-            }
         }
 
         // Find destination node ID from text
         let destinationId = null;
 
-        // First, check if the text is directly a node ID
-        if (graph[destinationText]) {
-            destinationId = destinationText;
-        }else if(destinationText.toLowerCase() === 'restroom' || destinationText.toLowerCase() === 'bathroom'){
+        // First, check if the destination is a restroom
+        if(destinationText.toLowerCase() === 'restroom' || destinationText.toLowerCase() === 'bathroom'){
             try{
                 const response = await fetch('/api/get-restroom', {
                 method: 'POST',
@@ -300,7 +295,11 @@
             }
         }
         
-        if (!destinationId) {
+        if (!startId){
+            alert(`Cannot find location "${startText}". Please enter a valid room number.`);
+            return;
+        }
+        else if (!destinationId){
             alert(`Cannot find location "${destinationText}". Please enter a valid room number.`);
             return;
         }
