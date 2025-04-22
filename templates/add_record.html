@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- Back Button to Administration Panel -->
+    <div class="d-flex justify-content-start mb-3">
+        <a href="{{ url_for('admin') }}" class="btn btn-danger">
+            <i class="bi bi-arrow-left-circle-fill"></i> Back
+        </a>
+    </div>
+
+    <h2>Add New Room</h2>
+    
+    <!-- Form with fields -->
+    <form action="{{ url_for('add_record') }}" method="POST" class="form-group">
+        <div class="row">
+            <!-- Room Number -->
+            <div class="col-md-3 mb-3">
+                <label for="room_number" class="form-label">Room Number:</label>
+                <input type="text" id="room_number" name="room_number" class="form-control" required>
+            </div>
+
+            <!-- Space Description -->
+            <div class="col-md-3 mb-3">
+                <label for="space_description" class="form-label">Space Description:</label>
+                <input type="text" id="space_description" name="space_description" class="form-control" required>
+            </div>
+
+            <!-- Contact -->
+            <div class="col-md-3 mb-3">
+                <label for="contact" class="form-label">Contact:</label>
+                <input type="text" id="contact" name="contact" class="form-control" required>
+            </div>
+
+            <!-- Department -->
+            <div class="col-md-3 mb-3">
+                <label for="department" class="form-label">Department:</label>
+                <input type="text" id="department" name="department" class="form-control" required>
+            </div>
+        </div>
+
+        <!-- Submit Button (Green, Inside the Form) -->
+        <div class="d-flex justify-content-end mb-3">
+            <button type="submit" class="btn btn-success">Submit</button>
+        </div>
+    </form>
+
+    <!-- Custom Modal for Success/Error Message -->
+    {% if message %}
+        <div id="customModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div class="alert alert-{{ message_type }}" role="alert">
+                    {{ message }}
+                </div>
+                <a href="{{ redirect_to }}" class="btn btn-secondary">Close</a>
+            </div>
+        </div>
+
+        <script>
+            // Function to show the modal
+            function showModal() {
+                document.getElementById('customModal').style.display = "block";
+            }
+
+            // Function to close the modal
+            function closeModal() {
+                document.getElementById('customModal').style.display = "none";
+            }
+
+            // Automatically show the modal when the page loads if there's a message
+            window.onload = function() {
+                showModal();
+            };
+        </script>
+
+        <style>
+            /* The Modal (background) */
+            .modal {
+                display: none; /* Hidden by default */
+                position: fixed; /* Stay in place */
+                z-index: 1; /* Sit on top */
+                left: 0;
+                top: 10%; /* Adjust the modal's position to be closer to the top of the page */
+                width: 100%; /* Full width */
+                height: 100%; /* Full height */
+                overflow: auto; /* Enable scroll if needed */
+                background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            }
+
+            /* Modal Content */
+            .modal-content {
+                background-color: #fefefe;
+                margin: auto; /* Center the modal */
+                padding: 20px;
+                border: 1px solid #888;
+                width: 60%; /* Adjust the width of the modal */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+
+            /* The Close Button */
+            .close {
+                color: #aaa;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+            }
+
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+            /* Adjust the button and alert styles */
+            .alert {
+                padding: 10px;
+                margin-bottom: 20px;
+                border-radius: 5px;
+            }
+
+            .btn-secondary {
+                margin-top: 10px;
+            }
+        </style>
+    {% endif %}
+{% endblock %}

@@ -353,12 +353,139 @@ def login():
     
         print(f"[INFO] Login successful for {email}")
         flash("Login successful!", "success")
-        return redirect(url_for('home'))
+        return redirect(url_for('admin'))
 
     except Exception as e:
         print(f"[WARNING] Login failed for: {email}")
         flash("Invalid credentials!", "danger")
         return redirect(url_for('settings'))
+    
+@app.route("/admin")
+def admin():
+    response = supabase_client.table("Room Info Table") \
+            .select("*") \
+            .order("room_number") \
+            .execute()
+        
+    data = response.data
+    return render_template("admin.html", data=data)
+
+@app.route("/update_records", methods=["POST"])
+def update_records():
+    form = request.form
+    row_index = form.get("row")
+    row_id = form.get(f"id_{row_index}")
+
+    update_data = {}
+    for key in form:
+        if key.endswith(f"_{row_index}") and not key.startswith("id_"):
+            column = key.rsplit("_", 1)[0]
+            if column != "room_number":
+                update_data[column] = form[key]
+
+    try:
+        app.logger.info("Update data: %s", update_data)
+        response = supabase_client.table("Room Info Table")\
+            .update(update_data)\
+            .eq("room_number", row_id)\
+            .execute()
+
+        if not response.data:
+            raise Exception("No data returned — possible failure in update.")
+
+        flash("Record updated successfully!", "success")
+    except Exception as e:
+        app.logger.error("Error updating record: %s", str(e))
+        flash(f"Error updating record: {str(e)}", "danger")
+
+    return redirect(url_for("admin"))
+
+@app.route("/delete_record", methods=["POST"])
+def delete_record():
+    try:
+        row_id = request.form.get("room_number")
+        response = supabase_client.table("Room Info Table") \
+            .delete() \
+            .eq("room_number", row_id) \
+            .execute()
+
+        if not response.data:
+            raise Exception("No data returned — possible failure in delete.")
+
+        flash("Record deleted successfully!", "success")
+    except Exception as e:
+        app.logger.error("Error deleting record: %s", str(e))
+        flash(f"Error deleting record: {str(e)}", "danger")
+
+    return redirect(url_for("admin"))
+
+@app.route("/add_record", methods=["GET", "POST"])
+def add_record():
+    message = None
+    message_type = "success"  # Default to success
+    redirect_to = url_for('admin')  # Default redirect to the admin page
+
+    if request.method == "POST":
+        form = request.form
+        new_data = {
+            "room_number": form.get("room_number"),
+            "space_description": form.get("space_description"),
+            "contact": form.get("contact"),
+            "department": form.get("department")
+        }
+
+        # Check if room_number already exists
+        room_number = form.get("room_number")
+        existing_record = supabase_client.table("Room Info Table").select("room_number").eq("room_number", room_number).execute()
+
+        if existing_record.data:
+            # Room number already exists
+            message = "Room number already exists. Please choose a unique room number."
+            message_type = "danger"  # Use 'danger' for error messages
+        else:
+            try:
+                # Insert the new record into the database
+                response = supabase_client.table("Room Info Table").insert(new_data).execute()
+                
+                if response.data:
+                    # Success message
+                    message = f"New record for room number {room_number} added successfully!"
+                else:
+                    raise Exception("Failed to add new record.")
+            except Exception as e:
+                message = f"Error adding record: {str(e)}"
+                message_type = "danger"  # Use 'danger' for error messages
+
+        return render_template("add_record.html", message=message, message_type=message_type, redirect_to=redirect_to)
+
+    return render_template("add_record.html")
+
+@app.route("/submit_record", methods=["POST"])
+def submit_record():
+    form = request.form
+    new_data = {}
+
+    for key in form:
+        new_data[key] = form[key]
+
+    # Insert the new record into the database (same logic as before)
+    room_number = form.get("room_number")
+    existing_record = supabase_client.table("Room Info Table").select("room_number").eq("room_number", room_number).execute()
+
+    if existing_record.data:
+        flash("Room number already exists. Please choose a unique room number.", "danger")
+        return redirect(url_for("add_record"))
+
+    try:
+        response = supabase_client.table("Room Info Table").insert(new_data).execute()
+        if not response.data:
+            raise Exception("Failed to add new record.")
+        flash("New record added successfully!", "success")
+        return redirect(url_for("admin"))
+    except Exception as e:
+        app.logger.error("Error adding record: %s", str(e))
+        flash(f"Error adding record: {str(e)}", "danger")
+        return redirect(url_for("add_record"))
 
 if __name__ == '__main__':
     app.run(debug=True)
