@@ -590,42 +590,7 @@ function animatePolyline(pathPoints) {
                 node.type_name || `${node.type} ${closest}`,
                 closest
             );
-    //         if (node.type === 'room') {
-    //         // First set just the room number
-    //         document.getElementById('start-input').value = closest;
-            
-    //         // Then try to get the room description
-    //         fetch('/api/get-room-description', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify({
-    //                 room_number: closest
-    //             })
-    //         })
-    //         .then(response => response.json())
-    //         .then(data => {
-    //             if (data.success) {
-    //                 document.getElementById('start-input').value = 
-    //                     `${closest} -- ${data.space_description}`;
-    //             }
-    //         })
-    //         .catch(error => {
-    //             console.error('Error getting room description:', error);
-    //             // Keep just the room number if there's an error
-    //         });
-    //     } else {
-    //         document.getElementById('start-input').value = closest;
-    //     }
-        
-    //         // If destination is entered, calculate route
-    //         const destination = document.getElementById('destination-input').value;
-    //         if (destination) {
-    //             calculateRouteFromText(closest, destination);
-    //         }
-    //     }
-    // });
+    
     document.getElementById('start-input').value = closest;
         
         // If destination is entered, calculate route

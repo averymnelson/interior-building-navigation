@@ -35,4 +35,22 @@
         </form>
     </div>
 </div>
+
+<script>
+    const keycardToggle = document.getElementById('keycardToggle');
+
+    // Load saved toggle state
+    const savedState = localStorage.getItem('keycardToggle');
+    if (savedState === 'true') {
+        keycardToggle.checked = true;
+    } else if (savedState === 'false') {
+        keycardToggle.checked = false;
+    }
+
+    // Save toggle state on change
+    keycardToggle.addEventListener('change', () => {
+        localStorage.setItem('keycardToggle', keycardToggle.checked);
+    });
+</script>
+
 {% endblock %}
