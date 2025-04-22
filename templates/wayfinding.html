@@ -123,41 +123,83 @@
     }
 
     //populate drop down lists
+    // Modified loadRoomDescriptions function to include all room points (with or without description)
     async function loadRoomDescriptions() {
         try {
+            // First, get all room descriptions from the database
             const response = await fetch('/get-room-descriptions');
-            const data = await response.json();
+            const roomData = await response.json();
 
-            if (data.error) {
-                console.error("Error fetching room descriptions:", data.error);
+            if (roomData.error) {
+                console.error("Error fetching room descriptions:", roomData.error);
                 return;
             }
 
+            // Now get all nodes from the graph to ensure we include all room points
+            const nodesResponse = await fetch('/api/nodes');
+            const nodesData = await nodesResponse.json();
+            
             const startDatalist = document.getElementById('start-list');
             const endDatalist = document.getElementById('destination-list');
             
-            // Sort alphabetically by space_description (case-insensitive)
-            data.sort((a, b) => {
-                const descA = a.space_description.toLowerCase();
-                const descB = b.space_description.toLowerCase();
-                return descA.localeCompare(descB);
-            });
-
             // Clear existing options
             startDatalist.innerHTML = '';
             endDatalist.innerHTML = '';
-            // Add each room description as an option in the datalist
-            data.forEach(room => {
-                const displayValue = `${room.room_number} -- ${room.space_description}`;
+
+            // Add each room as an option in the datalist
+            // First create a map of room numbers to room descriptions
+            const roomDescMap = {};
+            if (roomData && Array.isArray(roomData)) {
+                roomData.forEach(room => {
+                    if (room.room_number && room.space_description) {
+                        roomDescMap[room.room_number] = room.space_description;
+                    }
+                });
+            }
+            
+            // Collect all room points from the graph
+            const allRooms = [];
+            
+            // Add all room nodes from the graph whether they have descriptions or not
+            for (const [id, node] of Object.entries(nodesData)) {
+                if (node.type === 'room') {
+                    let displayValue;
+                    // If room has a description in the Room Info Table, use the combined format
+                    if (roomDescMap[id]) {
+                        displayValue = `${id} -- ${roomDescMap[id]}`;
+                    } else {
+                        // Otherwise just show the room number
+                        displayValue = `${id}`;
+                    }
+                    
+                    allRooms.push({
+                        id: id,
+                        displayValue: displayValue
+                    });
+                }
+            }
+            
+            // Sort alphabetically by display value (case-insensitive)
+            allRooms.sort((a, b) => {
+                return a.displayValue.toLowerCase().localeCompare(b.displayValue.toLowerCase());
+            });
+            
+            // Add each room to both datalists
+            allRooms.forEach(room => {
                 const startOption = document.createElement('option');
-                startOption.value = displayValue;
+                startOption.value = room.displayValue;
                 startDatalist.appendChild(startOption);
 
                 const endOption = document.createElement('option');
-                endOption.value = displayValue;
+                endOption.value = room.displayValue;
                 endDatalist.appendChild(endOption);
-
             });
+            
+            // Make sure restroom option is still available
+            const restroomOption = document.createElement('option');
+            restroomOption.value = "Restroom";
+            endDatalist.appendChild(restroomOption);
+            
         } catch (error) {
             console.error("Error loading room descriptions:", error);
         }
@@ -208,8 +250,8 @@
     // Function to calculate route from text inputs
     async function calculateRouteFromText(startText, destinationText) {
         function parseRoomNumber(text) {
-        // Check if the text follows the pattern "RoomNumber -- RoomDescription"
-            const match = text.match(/^([^\s-]+)\s+--\s+/);
+            // Check if the text follows the pattern "RoomNumber -- RoomDescription"
+            const match = text.match(/^([^\s-]+)(?:\s+--\s+.*)?$/);
             if (match) {
                 return match[1]; // Return just the room number part
             }
@@ -220,37 +262,35 @@
         const startRoomNumber = parseRoomNumber(startText);
         const destinationRoomNumber = parseRoomNumber(destinationText);
 
-        //check startID
+        // Check startID
         let startId = null;
         
-        //check if it's a room number
+        // First check if it's a room number directly
         for (const [id, node] of Object.entries(graph)) {
-            // Match room number from node info
             if (node.type === 'room' && id === startRoomNumber) {
                 startId = id;
-                break
+                break;
             }
         }
-        //check if it is a room description
-        if(!startId){
-            try{
+        
+        // If not found as a direct room number, check if it is a room description
+        if (!startId) {
+            try {
                 const response = await fetch('/api/get-room_number', {
-                method: 'POST',
-                headers: {
-                'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    destinationText: startText
-                })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        destinationText: startText
+                    })
                 });
                 const data = await response.json();
                 if (data.success) {
                     startId = data.end;
                 }
-
-            }catch(error) {
+            } catch (error) {
                 console.error('Error finding room:', error);
-                alert(`Cannot find location "${startText}". Please enter a valid room number.`);
             }
         }
 
@@ -258,64 +298,62 @@
         let destinationId = null;
 
         // First, check if the destination is a restroom
-        if(destinationText.toLowerCase() === 'restroom' || destinationText.toLowerCase() === 'bathroom'){
-            try{
+        if (destinationText.toLowerCase() === 'restroom' || destinationText.toLowerCase() === 'bathroom') {
+            try {
                 const response = await fetch('/api/get-restroom', {
-                method: 'POST',
-                headers: {
-                'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    startId: startId
-                })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        startId: startId
+                    })
                 });
                 const data = await response.json();
                 if (data.success) {
                     destinationId = data.end;
-                }else {
+                } else {
                     throw new Error(data.message || "Room not found");
                 }
-
-            }catch(error) {
+            } catch (error) {
                 console.error('Error calculating restroomID:', error);
                 alert("Error calculating route. Please try again.");
             }
-        }else{
-            //check if it's a room number
+        } else {
+            // Check if it's a room number directly
             for (const [id, node] of Object.entries(graph)) {
-                // Match room number from node info
                 if (node.type === 'room' && id === destinationRoomNumber) {
                     destinationId = id;
-                    break
+                    break;
                 }
             }
-            //check if it is a room description
-            if(!destinationId){
-                try{
+            
+            // If not found as a direct room number, check if it is a room description
+            if (!destinationId) {
+                try {
                     const response = await fetch('/api/get-room_number', {
-                    method: 'POST',
-                    headers: {
-                    'Content-Type': 'application/json'
-                },
-                    body: JSON.stringify({
-                        destinationText: destinationText
-                    })
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            destinationText: destinationText
+                        })
                     });
                     const data = await response.json();
                     if (data.success) {
                         destinationId = data.end;
                     }
-                }catch(error) {
+                } catch (error) {
                     console.error('Error finding room:', error);
                 }
             }
         }
         
-        if (!startId){
+        if (!startId) {
             alert(`Cannot find location "${startText}". Please enter a valid room number.`);
             return;
-        }
-        else if (!destinationId){
+        } else if (!destinationId) {
             alert(`Cannot find location "${destinationText}". Please enter a valid room number.`);
             return;
         }

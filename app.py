@@ -224,14 +224,19 @@ def api_locate_user():
 
 @app.route('/get-room-descriptions')
 def get_room_descriptions():
-    # Fetch space descriptions from the 'Room Info' table
-    response = supabase_client.from_('Room Info Table').select('room_number,space_description').execute()
-
-    if response:
-        return jsonify(response.data)
-    else:
-        return jsonify({'success': False, "error": "Unable to fetch data"}), 400
-
+    try:
+        # Fetch space descriptions from the 'Room Info' table
+        response = supabase_client.from_('Room Info Table').select('room_number,space_description').execute()
+        
+        # Return the response data directly - we'll handle combining with nodes in the frontend
+        if response:
+            return jsonify(response.data)
+        else:
+            return jsonify({'success': False, "error": "Unable to fetch data"}), 400
+    except Exception as e:
+        print(f"Error getting room descriptions: {e}")
+        return jsonify({'success': False, "error": f"Unable to fetch data: {str(e)}"}), 400
+    
 @app.route('/api/get-room_number', methods=['POST'])
 def get_room_number():
     data = request.json
