@@ -336,7 +336,8 @@ def api_get_restroom():
     if start_id not in graph.nodes:
         return jsonify({'success': False, 'error': 'Invalid start node'})
     
-    end = find_restroom(graph, start_id)
+    edges_data = edges.data
+    end = find_restroom(graph, start_id, edges_data)
     if not end:
         return jsonify({'success': False, 'error': 'No restroom found'})
     return jsonify({
