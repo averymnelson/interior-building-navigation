@@ -141,6 +141,10 @@ def find_restroom(graph: NavigationGraph, room_id: str, edges_data=None):
     shortest_path_length = float('inf')
     fewest_non_hallways = float('inf')
 
+    if room_id in restrooms:
+        return []
+
+
     for restroom_id in restrooms:
         path = a_star(graph, room_id, str(restroom_id), edges_data)
         
