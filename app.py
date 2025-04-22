@@ -221,10 +221,11 @@ def api_locate_user():
         })
     
     return jsonify({'success': False, 'error': 'Unable to locate user'})
+
 @app.route('/get-room-descriptions')
 def get_room_descriptions():
     # Fetch space descriptions from the 'Room Info' table
-    response = supabase_client.from_('Room Info Table').select('space_description').execute()
+    response = supabase_client.from_('Room Info Table').select('room_number,space_description').execute()
 
     if response:
         return jsonify(response.data)

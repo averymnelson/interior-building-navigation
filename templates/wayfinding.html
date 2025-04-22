@@ -143,14 +143,18 @@
                 return descA.localeCompare(descB);
             });
 
+            // Clear existing options
+            startDatalist.innerHTML = '';
+            endDatalist.innerHTML = '';
             // Add each room description as an option in the datalist
             data.forEach(room => {
+                const displayValue = `${room.room_number} -- ${room.space_description}`;
                 const startOption = document.createElement('option');
-                startOption.value = room.space_description;
+                startOption.value = displayValue;
                 startDatalist.appendChild(startOption);
 
                 const endOption = document.createElement('option');
-                endOption.value = room.space_description;
+                endOption.value = displayValue;
                 endDatalist.appendChild(endOption);
 
             });
@@ -203,22 +207,33 @@
 
     // Function to calculate route from text inputs
     async function calculateRouteFromText(startText, destinationText) {
-       //check startID
-        let startId = null;
-        if (graph[startText]) {
-            startId = startText;
-        }else{
-            //check if it's a room number
-            for (const [id, node] of Object.entries(graph)) {
-                // Match room number from node info
-                if (node.type === 'room' && id === startText) {
-                    startId = id;
-                    break
-                }
+        function parseRoomNumber(text) {
+        // Check if the text follows the pattern "RoomNumber -- RoomDescription"
+            const match = text.match(/^([^\s-]+)\s+--\s+/);
+            if (match) {
+                return match[1]; // Return just the room number part
             }
-            //check if it is a room description
-            if(!startId){
-                try{
+            return text; // Return the original text if no pattern match
+        }
+
+        // Extract room numbers if in the combined format
+        const startRoomNumber = parseRoomNumber(startText);
+        const destinationRoomNumber = parseRoomNumber(destinationText);
+
+        //check startID
+        let startId = null;
+        
+        //check if it's a room number
+        for (const [id, node] of Object.entries(graph)) {
+            // Match room number from node info
+            if (node.type === 'room' && id === startRoomNumber) {
+                startId = id;
+                break
+            }
+        }
+        //check if it is a room description
+        if(!startId){
+            try{
                 const response = await fetch('/api/get-room_number', {
                 method: 'POST',
                 headers: {
@@ -230,23 +245,20 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                startId = data.end;
+                    startId = data.end;
                 }
 
             }catch(error) {
                 console.error('Error finding room:', error);
                 alert(`Cannot find location "${startText}". Please enter a valid room number.`);
             }
-            }
         }
 
         // Find destination node ID from text
         let destinationId = null;
 
-        // First, check if the text is directly a node ID
-        if (graph[destinationText]) {
-            destinationId = destinationText;
-        }else if(destinationText.toLowerCase() === 'restroom' || destinationText.toLowerCase() === 'bathroom'){
+        // First, check if the destination is a restroom
+        if(destinationText.toLowerCase() === 'restroom' || destinationText.toLowerCase() === 'bathroom'){
             try{
                 const response = await fetch('/api/get-restroom', {
                 method: 'POST',
@@ -259,10 +271,10 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                destinationId = data.end;
+                    destinationId = data.end;
                 }else {
-                throw new Error(data.message || "Room not found");
-                 }
+                    throw new Error(data.message || "Room not found");
+                }
 
             }catch(error) {
                 console.error('Error calculating restroomID:', error);
@@ -272,7 +284,7 @@
             //check if it's a room number
             for (const [id, node] of Object.entries(graph)) {
                 // Match room number from node info
-                if (node.type === 'room' && id === destinationText) {
+                if (node.type === 'room' && id === destinationRoomNumber) {
                     destinationId = id;
                     break
                 }
@@ -280,27 +292,30 @@
             //check if it is a room description
             if(!destinationId){
                 try{
-                const response = await fetch('/api/get-room_number', {
-                method: 'POST',
-                headers: {
-                'Content-Type': 'application/json'
+                    const response = await fetch('/api/get-room_number', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    destinationText: destinationText
-                })
-                });
-                const data = await response.json();
-                if (data.success) {
-                destinationId = data.end;
+                    body: JSON.stringify({
+                        destinationText: destinationText
+                    })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        destinationId = data.end;
+                    }
+                }catch(error) {
+                    console.error('Error finding room:', error);
                 }
-
-            }catch(error) {
-                console.error('Error finding room:', error);
-            }
             }
         }
         
-        if (!destinationId) {
+        if (!startId){
+            alert(`Cannot find location "${startText}". Please enter a valid room number.`);
+            return;
+        }
+        else if (!destinationId){
             alert(`Cannot find location "${destinationText}". Please enter a valid room number.`);
             return;
         }
@@ -537,14 +552,51 @@ function animatePolyline(pathPoints) {
                 node.type_name || `${node.type} ${closest}`,
                 closest
             );
+    //         if (node.type === 'room') {
+    //         // First set just the room number
+    //         document.getElementById('start-input').value = closest;
             
-            // If destination is entered, calculate route
-            const destination = document.getElementById('destination-input').value;
-            if (destination) {
-                calculateRouteFromText(closest, destination);
-            }
+    //         // Then try to get the room description
+    //         fetch('/api/get-room-description', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify({
+    //                 room_number: closest
+    //             })
+    //         })
+    //         .then(response => response.json())
+    //         .then(data => {
+    //             if (data.success) {
+    //                 document.getElementById('start-input').value = 
+    //                     `${closest} -- ${data.space_description}`;
+    //             }
+    //         })
+    //         .catch(error => {
+    //             console.error('Error getting room description:', error);
+    //             // Keep just the room number if there's an error
+    //         });
+    //     } else {
+    //         document.getElementById('start-input').value = closest;
+    //     }
+        
+    //         // If destination is entered, calculate route
+    //         const destination = document.getElementById('destination-input').value;
+    //         if (destination) {
+    //             calculateRouteFromText(closest, destination);
+    //         }
+    //     }
+    // });
+    document.getElementById('start-input').value = closest;
+        
+        // If destination is entered, calculate route
+        const destination = document.getElementById('destination-input').value;
+        if (destination) {
+            calculateRouteFromText(closest, destination);
         }
-    });
+    }
+});
 
     // Event listeners
     document.getElementById('locate-btn').addEventListener('click', locateUser);
