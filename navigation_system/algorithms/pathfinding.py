@@ -40,8 +40,8 @@ def a_star(graph: NavigationGraph, start_id: str, goal_id: str, edges_data=None,
             hallway_lookup[key2] = is_hallway
     
     # Print info about hallway edges for debugging
-    hallway_count = sum(1 for v in hallway_lookup.values() if v)
-    print(f"Found {hallway_count} hallway edges out of {len(hallway_lookup)} total")
+    # hallway_count = sum(1 for v in hallway_lookup.values() if v)
+    # print(f"Found {hallway_count} hallway edges out of {len(hallway_lookup)} total")
 
     # Priority queue with components: (non_hallway_count, distance, node_id)
     # This makes non-hallway segment count the primary sorting criterion
@@ -76,16 +76,16 @@ def a_star(graph: NavigationGraph, start_id: str, goal_id: str, edges_data=None,
             path = path[::-1]
             
             # Print hallway status for debugging
-            print("Final path with hallway status:")
+            # print("Final path with hallway status:")
             non_hallway_segments = 0
             for i in range(len(path) - 1):
                 edge_key = f"{path[i]}-{path[i+1]}"
                 hallway_value = hallway_lookup.get(edge_key, False)
                 if not hallway_value:
                     non_hallway_segments += 1
-                print(f"  {edge_key}: hallway={hallway_value}")
+                # print(f"  {edge_key}: hallway={hallway_value}")
             
-            print(f"Path has {non_hallway_segments} non-hallway segments out of {len(path)-1} total segments")
+            # print(f"Path has {non_hallway_segments} non-hallway segments out of {len(path)-1} total segments")
             return path
         
         current_node = graph.nodes[current_id]
