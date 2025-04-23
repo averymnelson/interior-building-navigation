@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Settings</h1>
+
+<div class="container text-center">
+    <!-- Keycard Toggle -->
+    <div class="d-flex justify-content-between align-items-center my-3">
+        <label class="form-label">Keycard Access</label>
+        <div class="form-check form-switch">
+            <input class="form-check-input toggle-switch" type="checkbox" id="keycardToggle">
+        </div>
+    </div>
+
+    <!-- Admin Login Button -->
+    <div class="d-flex justify-content-between align-items-center my-3">
+        <label class="form-label">Administator</label>
+        <div class="text-center">
+            <button class="btn btn-dark admin-button" onclick="document.getElementById('loginModal').style.display='block'">Login</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Login Popup -->
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="document.getElementById('loginModal').style.display='none'">&times;</span>
+        <form action="{{ url_for('login') }}" method="POST">
+            <label for="email">email</label>
+            <input type="text" id="email" name="email" required>
+
+            <label for="password">password</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit" class="submit-button">submit</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const keycardToggle = document.getElementById('keycardToggle');
+
+    // Load saved toggle state
+    const savedState = localStorage.getItem('keycardToggle');
+    if (savedState === 'true') {
+        keycardToggle.checked = true;
+    } else if (savedState === 'false') {
+        keycardToggle.checked = false;
+    }
+
+    // Save toggle state on change
+    keycardToggle.addEventListener('change', () => {
+        const toggleState = keycardToggle.checked;
+        localStorage.setItem('keycardToggle', toggleState);
+
+        // Send the state to the server
+        fetch('/update-keycard-toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ keycardToggle: toggleState }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Server response:', data);
+        })
+        .catch(error => {
+            console.error('Error sending keycard toggle state:', error);
+        });
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggle = document.getElementById("keycard-toggle");
+        fetch("/set-keycard-state", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ enabled: toggle.checked })
+        });
+    });
+</script>
+
+{% endblock %}
