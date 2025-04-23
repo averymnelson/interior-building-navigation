@@ -356,6 +356,9 @@
         } else if (!destinationId) {
             alert(`Cannot find location "${destinationText}". Please enter a valid room number.`);
             return;
+        } else if(startId == destinationId){
+            alert(`Start point and destination cannot be the same.`);
+            return;
         }
         
         // Call the route calculator with node IDs
