@@ -39,31 +39,30 @@ DB_PATH = os.path.join(os.path.dirname(__file__), 'navigation.db')
 # Initialize graph
 graph = NavigationGraph()
 
-# Load graph from CSV files
-url = "https://rbuwdtslfurengikxkcm.supabase.co"
-key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJidXdkdHNsZnVyZW5naWt4a2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg5NDQ1NjQsImV4cCI6MjA1NDUyMDU2NH0.uQ5XQ2om0Jvy4vhY3g1SKTUfDlE6Y3uMgiiyp3slD5k"
 
-supabase: Client = create_client(url, key)
-
-nodes = supabase.table("Point Table").select("*").execute()
-
-edges = supabase.table("Edge Table").select("*").execute()
+which_edge_table = "Edge Table"  # Default edge table
 
 # Load graph from CSV files
 # Modified load_graph_from_csv function to debug hallway information
 def load_graph_from_csv():
+    global nodes
+    global edges
+
+    nodes = supabase_client.table("Point Table").select("*").execute()
+
+    edges = supabase_client.table(which_edge_table).select("*").execute()
     # Load nodes
     for data in nodes.data:
         graph.add_node(data['pointnum'], data['type'], 1, data['x_position'], data['y_position'])
    
     # Debug: Print the first few edge records to verify hallway column
-    print("Checking Edge Table data structure:")
-    if edges.data and len(edges.data) > 0:
-        sample_edge = edges.data[0]
-        print(f"Sample edge data: {sample_edge}")
-        print(f"Hallway field exists: {'hallway' in sample_edge}")
-        if 'hallway' in sample_edge:
-            print(f"Hallway value: {sample_edge['hallway']}")
+    # print("Checking Edge Table data structure:")
+    # if edges.data and len(edges.data) > 0:
+    #     sample_edge = edges.data[0]
+        # print(f"Sample edge data: {sample_edge}")
+        # print(f"Hallway field exists: {'hallway' in sample_edge}")
+        # if 'hallway' in sample_edge:
+        #     print(f"Hallway value: {sample_edge['hallway']}")
     
     # Load edges
     for data in edges.data:
@@ -280,15 +279,15 @@ def api_calculate_route():
     # Ensure we're getting the complete edge data
     try:
         # Fetch the latest edge data directly from the database to ensure we have hallway information
-        latest_edges = supabase.table("Edge Table").select("*").execute()
+        latest_edges = supabase_client.table(which_edge_table).select("*").execute()
         edges_data = latest_edges.data
-        print(f"Fetched {len(edges_data)} edges for pathfinding")
+        # print(f"Fetched {len(edges_data)} edges for pathfinding")
         
         # Debug: check if hallway column exists
-        if edges_data and len(edges_data) > 0:
-            sample_edge = edges_data[0]
-            print(f"Sample edge data: {sample_edge}")
-            print(f"Hallway field exists: {'hallway' in sample_edge}")
+        # if edges_data and len(edges_data) > 0:
+        #     sample_edge = edges_data[0]
+            # print(f"Sample edge data: {sample_edge}")
+            # print(f"Hallway field exists: {'hallway' in sample_edge}")
     except Exception as e:
         print(f"Error fetching edge data: {e}")
         edges_data = edges.data  # Fall back to the original data
@@ -297,9 +296,9 @@ def api_calculate_route():
     path = a_star(graph, start_id, end_id, edges_data, prefer_hallways)
     
     instructions = get_navigation_instructions(graph, path)
-    print("\nNavigation Instructions:")
-    for i, instruction in enumerate(instructions, 1):
-        print(f"Step {i}: {instruction}")
+    # print("\nNavigation Instructions:")
+    # for i, instruction in enumerate(instructions, 1):
+    #     print(f"Step {i}: {instruction}")
     
     if not path:
         return jsonify({'success': False, 'error': 'No path found'})
@@ -336,8 +335,7 @@ def api_get_restroom():
     if start_id not in graph.nodes:
         return jsonify({'success': False, 'error': 'Invalid start node'})
     
-    edges_data = edges.data
-    end = find_restroom(graph, start_id, edges_data)
+    end = find_restroom(graph, start_id)
     if not end:
         return jsonify({'success': False, 'error': 'No restroom found'})
     return jsonify({
@@ -418,6 +416,25 @@ def get_directions():
 @app.route('/settings')
 def settings():
     return render_template('settings.html', title="Settings")
+
+@app.route('/update-keycard-toggle', methods=['POST'])
+def update_keycard_toggle():
+    data = request.json
+    keycard_state = data.get('keycardToggle')
+    global which_edge_table
+    if keycard_state is not None:
+        # Process the keycard state (e.g., save it to a database or use it in logic)
+        print(f"Keycard toggle state: {keycard_state}")
+        if keycard_state == True:
+            # Enable keycard access
+            which_edge_table = "Keycard Edge Table"
+            load_graph_from_csv()
+        elif keycard_state == False:
+            # Disable keycard access
+            which_edge_table = "Edge Table"
+            load_graph_from_csv()
+        return jsonify({'success': True, 'message': 'Keycard toggle state updated'})
+    return jsonify({'success': False, 'message': 'Invalid keycard toggle state'})
 
 @app.route('/login', methods=['POST'])
 def login():

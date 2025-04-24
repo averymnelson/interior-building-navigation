@@ -44,4 +44,49 @@
         </form>
     </div>
 </div>
+
+<script>
+    const keycardToggle = document.getElementById('keycardToggle');
+
+    // Load saved toggle state
+    const savedState = localStorage.getItem('keycardToggle');
+    if (savedState === 'true') {
+        keycardToggle.checked = true;
+    } else if (savedState === 'false') {
+        keycardToggle.checked = false;
+    }
+    // Save toggle state on change
+    keycardToggle.addEventListener('change', () => {
+        const toggleState = keycardToggle.checked;
+        localStorage.setItem('keycardToggle', toggleState);
+
+        // Send the state to the server
+        fetch('/update-keycard-toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ keycardToggle: toggleState }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Server response:', data);
+        })
+        .catch(error => {
+            console.error('Error sending keycard toggle state:', error);
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggle = document.getElementById("keycard-toggle");
+        fetch("/set-keycard-state", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ enabled: toggle.checked })
+        });
+    });
+</script>
+
 {% endblock %}
