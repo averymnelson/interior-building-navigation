@@ -11,15 +11,6 @@
         </div>
     </div>
 
-    <!-- Location Access Toggle -->
-    <!-- TODO: Should permission be automatically enabled? -->
-    <div class="d-flex justify-content-between align-items-center my-3">
-        <label class="form-label">Location Permissions Enabled</label>
-        <div class="form-check form-switch">
-            <input class="form-check-input toggle-switch" type="checkbox" id="locationToggle" checked>
-        </div>
-    </div>
-
     <!-- Admin Login Button -->
     <div class="d-flex justify-content-between align-items-center my-3">
         <label class="form-label">Administator</label>
@@ -44,4 +35,22 @@
         </form>
     </div>
 </div>
+
+<script>
+    const keycardToggle = document.getElementById('keycardToggle');
+
+    // Load saved toggle state
+    const savedState = localStorage.getItem('keycardToggle');
+    if (savedState === 'true') {
+        keycardToggle.checked = true;
+    } else if (savedState === 'false') {
+        keycardToggle.checked = false;
+    }
+
+    // Save toggle state on change
+    keycardToggle.addEventListener('change', () => {
+        localStorage.setItem('keycardToggle', keycardToggle.checked);
+    });
+</script>
+
 {% endblock %}

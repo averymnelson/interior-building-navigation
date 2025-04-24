@@ -57,13 +57,13 @@ def load_graph_from_csv():
         graph.add_node(data['pointnum'], data['type'], 1, data['x_position'], data['y_position'])
    
     # Debug: Print the first few edge records to verify hallway column
-    print("Checking Edge Table data structure:")
-    if edges.data and len(edges.data) > 0:
-        sample_edge = edges.data[0]
-        print(f"Sample edge data: {sample_edge}")
-        print(f"Hallway field exists: {'hallway' in sample_edge}")
-        if 'hallway' in sample_edge:
-            print(f"Hallway value: {sample_edge['hallway']}")
+    # print("Checking Edge Table data structure:")
+    # if edges.data and len(edges.data) > 0:
+    #     sample_edge = edges.data[0]
+        # print(f"Sample edge data: {sample_edge}")
+        # print(f"Hallway field exists: {'hallway' in sample_edge}")
+        # if 'hallway' in sample_edge:
+        #     print(f"Hallway value: {sample_edge['hallway']}")
     
     # Load edges
     for data in edges.data:
@@ -282,13 +282,13 @@ def api_calculate_route():
         # Fetch the latest edge data directly from the database to ensure we have hallway information
         latest_edges = supabase.table("Edge Table").select("*").execute()
         edges_data = latest_edges.data
-        print(f"Fetched {len(edges_data)} edges for pathfinding")
+        # print(f"Fetched {len(edges_data)} edges for pathfinding")
         
         # Debug: check if hallway column exists
-        if edges_data and len(edges_data) > 0:
-            sample_edge = edges_data[0]
-            print(f"Sample edge data: {sample_edge}")
-            print(f"Hallway field exists: {'hallway' in sample_edge}")
+        # if edges_data and len(edges_data) > 0:
+        #     sample_edge = edges_data[0]
+            # print(f"Sample edge data: {sample_edge}")
+            # print(f"Hallway field exists: {'hallway' in sample_edge}")
     except Exception as e:
         print(f"Error fetching edge data: {e}")
         edges_data = edges.data  # Fall back to the original data
@@ -297,9 +297,9 @@ def api_calculate_route():
     path = a_star(graph, start_id, end_id, edges_data, prefer_hallways)
     
     instructions = get_navigation_instructions(graph, path)
-    print("\nNavigation Instructions:")
-    for i, instruction in enumerate(instructions, 1):
-        print(f"Step {i}: {instruction}")
+    # print("\nNavigation Instructions:")
+    # for i, instruction in enumerate(instructions, 1):
+    #     print(f"Step {i}: {instruction}")
     
     if not path:
         return jsonify({'success': False, 'error': 'No path found'})
