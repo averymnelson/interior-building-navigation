@@ -248,33 +248,94 @@
     }
 
     // Function to calculate route from text inputs
-    async function calculateRouteFromText(startText, destinationText) {
-        function parseRoomNumber(text) {
-            // Check if the text follows the pattern "RoomNumber -- RoomDescription"
-            const match = text.match(/^([^\s-]+)(?:\s+--\s+.*)?$/);
-            if (match) {
-                return match[1]; // Return just the room number part
-            }
-            return text; // Return the original text if no pattern match
+    // Function to calculate route from text inputs
+async function calculateRouteFromText(startText, destinationText) {
+    function parseRoomNumber(text) {
+        // Check if the text follows the pattern "RoomNumber -- RoomDescription"
+        const match = text.match(/^([^\s-]+)(?:\s+--\s+.*)?$/);
+        if (match) {
+            return match[1]; // Return just the room number part
         }
+        return text; // Return the original text if no pattern match
+    }
 
-        // Extract room numbers if in the combined format
-        const startRoomNumber = parseRoomNumber(startText);
-        const destinationRoomNumber = parseRoomNumber(destinationText);
+    // Extract room numbers if in the combined format
+    const startRoomNumber = parseRoomNumber(startText);
+    const destinationRoomNumber = parseRoomNumber(destinationText);
 
-        // Check startID
-        let startId = null;
+    // Check startID
+    let startId = null;
+    
+    // First check if it's a room number directly
+    for (const [id, node] of Object.entries(graph)) {
+        if (node.type === 'room' && id === startRoomNumber) {
+            startId = id;
+            break;
+        }
+    }
+    
+    // If not found as a direct room number, check if it is a room description
+    if (!startId) {
+        try {
+            const response = await fetch('/api/get-room_number', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    destinationText: startText
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                startId = data.end;
+            }
+        } catch (error) {
+            console.error('Error finding room:', error);
+        }
+    }
+
+    // Find destination node ID from text
+    let destinationId = null;
+
+    // First, check if the destination is a restroom
+    // Update in the calculateRouteFromText function where it handles restrooms
+if (destinationText.toLowerCase() === 'restroom' || destinationText.toLowerCase() === 'bathroom') {
+    try {
+        // Check if the user has keycard access
+        const hasKeycard = localStorage.getItem('keycardToggle') === 'true';
         
-        // First check if it's a room number directly
+        const response = await fetch('/api/get-restroom', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                startId: startId,
+                has_keycard: hasKeycard
+            })
+        });
+        const data = await response.json();
+        if (data.success) {
+            destinationId = data.end;
+        } else {
+            throw new Error(data.message || "Room not found");
+        }
+    } catch (error) {
+        console.error('Error calculating restroomID:', error);
+        alert("Error calculating route. Please try again.");
+    }
+} else {
+        // Check if it's a room number directly
         for (const [id, node] of Object.entries(graph)) {
-            if (node.type === 'room' && id === startRoomNumber) {
-                startId = id;
+            if (node.type === 'room' && id === destinationRoomNumber) {
+                destinationId = id;
                 break;
             }
         }
         
         // If not found as a direct room number, check if it is a room description
-        if (!startId) {
+        if (!destinationId) {
             try {
                 const response = await fetch('/api/get-room_number', {
                     method: 'POST',
@@ -282,88 +343,33 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        destinationText: startText
-                    })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    startId = data.end;
-                }
-            } catch (error) {
-                console.error('Error finding room:', error);
-            }
-        }
-
-        // Find destination node ID from text
-        let destinationId = null;
-
-        // First, check if the destination is a restroom
-        if (destinationText.toLowerCase() === 'restroom' || destinationText.toLowerCase() === 'bathroom') {
-            try {
-                const response = await fetch('/api/get-restroom', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        startId: startId
+                        destinationText: destinationText
                     })
                 });
                 const data = await response.json();
                 if (data.success) {
                     destinationId = data.end;
-                } else {
-                    throw new Error(data.message || "Room not found");
                 }
             } catch (error) {
-                console.error('Error calculating restroomID:', error);
-                alert("Error calculating route. Please try again.");
-            }
-        } else {
-            // Check if it's a room number directly
-            for (const [id, node] of Object.entries(graph)) {
-                if (node.type === 'room' && id === destinationRoomNumber) {
-                    destinationId = id;
-                    break;
-                }
-            }
-            
-            // If not found as a direct room number, check if it is a room description
-            if (!destinationId) {
-                try {
-                    const response = await fetch('/api/get-room_number', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            destinationText: destinationText
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        destinationId = data.end;
-                    }
-                } catch (error) {
-                    console.error('Error finding room:', error);
-                }
+                console.error('Error finding room:', error);
             }
         }
-        
-        if (!startId) {
-            alert(`Cannot find location "${startText}". Please enter a valid room number.`);
-            return;
-        } else if (!destinationId) {
-            alert(`Cannot find location "${destinationText}". Please enter a valid room number.`);
-            return;
-        } else if(startId == destinationId){
-            alert(`Start point and destination cannot be the same.`);
-            return;
-        }
-        
-        // Call the route calculator with node IDs
-        await calculateRoute(startId, destinationId);
     }
+    
+    if (!startId) {
+        alert(`Cannot find location "${startText}". Please enter a valid room number.`);
+        return;
+    } else if (!destinationId) {
+        alert(`Cannot find location "${destinationText}". Please enter a valid room number.`);
+        return;
+    } else if(startId == destinationId){
+        alert(`Start point and destination cannot be the same.`);
+        return;
+    }
+    
+    // Call the route calculator with node IDs
+    await calculateRoute(startId, destinationId);
+}
 
 // Function to calculate route
 async function calculateRoute(start, end) {
@@ -373,14 +379,18 @@ async function calculateRoute(start, end) {
     }
 
     try {
-            const response = await fetch('/api/route', {
+        // Check if the user has keycard access
+        const hasKeycard = localStorage.getItem('keycardToggle') === 'true';
+        
+        const response = await fetch('/api/route', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 start: start,
-                end: end
+                end: end,
+                has_keycard: hasKeycard // Send keycard status to the backend
             })
         });
         const data = await response.json();
