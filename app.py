@@ -49,6 +49,7 @@ nodes = supabase.table("Point Table").select("*").execute()
 
 edges = supabase.table("Edge Table").select("*").execute()
 
+keycard_edges = supabase.table("Keycard Edge Table").select("*").execute()
 # Load graph from CSV files
 # Modified load_graph_from_csv function to debug hallway information
 def load_graph_from_csv():
@@ -71,6 +72,12 @@ def load_graph_from_csv():
             graph.add_edge(data['pointnum1'], data['pointnum2'])
         except KeyError:
             print(f"Warning: Could not add edge between {data['pointnum1']} and {data['pointnum2']} - nodes not found")
+    
+    for data in keycard_edges.data:
+        try:
+            graph.add_edge(data['pointnum1'], data['pointnum2'])
+        except KeyError:
+            print(f"[Keycard Edge Warning] Could not add edge between {data['pointnum1']} and {data['pointnum2']} - nodes not found")
 
 # If CSV files don't exist, create test data
 def create_test_graph():
@@ -249,6 +256,7 @@ def get_room_number():
         return jsonify({"success": True, "end": str(response.data[0]['room_number'])})
     else:
         return jsonify({"success": False, "message": f"No room found for description '{room_description}'"})
+
 @app.route('/api/nodes')
 def api_get_nodes():
     """Get all nodes in the graph"""
@@ -264,62 +272,79 @@ def api_get_nodes():
         }
     return jsonify(nodes_data)
 
+@app.route('/api/edges')
+def api_get_edges():
+    """Get all regular edges in the graph"""
+    try:
+        edges_response = supabase.table("Edge Table").select("*").execute()
+        return jsonify(edges_response.data)
+    except Exception as e:
+        print(f"Error fetching edge data: {e}")
+        return jsonify([])
+
+@app.route('/api/keycard-edges')
+def api_get_keycard_edges():
+    """Get all keycard-protected edges in the graph"""
+    try:
+        keycard_edges_response = supabase.table("Keycard Edge Table").select("*").execute()
+        print("=== KEYCARD EDGES TABLE CONTENT ===")
+        for i, edge in enumerate(keycard_edges_response.data):
+            print(f"Edge {i+1}: {edge}")
+        print("=== END KEYCARD EDGES TABLE CONTENT ===")
+        return jsonify(keycard_edges_response.data)
+    except Exception as e:
+        print(f"Error fetching keycard edge data: {e}")
+        return jsonify([])
+    
 @app.route('/api/route', methods=['POST'])
 def api_calculate_route():
-    """Calculate route between two points"""
     data = request.json
     start_id = data.get('start')
     end_id = data.get('end')
-    prefer_hallways = data.get('prefer_hallways', True)  # Default to preferring hallways
-    
-    print(f"Calculating route from {start_id} to {end_id}, prefer_hallways={prefer_hallways}")
-    
+    prefer_hallways = data.get('prefer_hallways', True)
+    has_keycard = data.get('has_keycard', False)
+
+    print(f"Calculating route from {start_id} to {end_id}, prefer_hallways={prefer_hallways}, has_keycard={has_keycard}")
+
     if start_id not in graph.nodes or end_id not in graph.nodes:
         return jsonify({'success': False, 'error': 'Invalid start or end node'})
-    
-    # Ensure we're getting the complete edge data
+
     try:
-        # Fetch the latest edge data directly from the database to ensure we have hallway information
-        latest_edges = supabase.table("Edge Table").select("*").execute()
-        edges_data = latest_edges.data
-        # print(f"Fetched {len(edges_data)} edges for pathfinding")
-        
-        # Debug: check if hallway column exists
-        # if edges_data and len(edges_data) > 0:
-        #     sample_edge = edges_data[0]
-            # print(f"Sample edge data: {sample_edge}")
-            # print(f"Hallway field exists: {'hallway' in sample_edge}")
+        # Load regular edges
+        regular_edges_response = supabase.table("Edge Table").select("*").execute()
+        all_edges = list(regular_edges_response.data)  # start with regular edges only
+
+        # If user has keycard, add keycard edges too
+        if has_keycard:
+            keycard_edges = supabase.table("Keycard Edge Table").select("*").execute()
+            all_edges.extend(keycard_edges.data)
+            # print(f"✔ Added {len(keycard_edges)} keycard edges to edge list")
+
     except Exception as e:
-        print(f"Error fetching edge data: {e}")
-        edges_data = edges.data  # Fall back to the original data
-    
-    # Pass the edges data to A* for hallway preference routing
-    path = a_star(graph, start_id, end_id, edges_data, prefer_hallways)
-    
-    instructions = get_navigation_instructions(graph, path)
-    # print("\nNavigation Instructions:")
-    # for i, instruction in enumerate(instructions, 1):
-    #     print(f"Step {i}: {instruction}")
-    
+        print(f"❌ Error fetching edge data: {e}")
+        return jsonify({'success': False, 'error': 'Edge fetch error'})
+
+    # ✅ Now pass combined edge list to a_star
+    path = a_star(graph, start_id, end_id, all_edges, prefer_hallways)
+
     if not path:
         return jsonify({'success': False, 'error': 'No path found'})
-    
-    # Convert to coordinates for display
+
+    instructions = get_navigation_instructions(graph, path)
+
+    # Construct path details
     path_details = []
     for node_id in path:
         node = graph.nodes[node_id]
-        is_dp = is_decision_point(node_id)
-        
-        node_info = {
+        path_details.append({
             'node_id': node_id,
             'x': node.x,
             'y': node.y,
-            'is_decision_point': is_dp,
-            'description': get_decision_point_info(node_id)['description'] if get_decision_point_info(node_id) else f"{node.type_name} {node_id}"
-        }
-            
-        path_details.append(node_info)
-    
+            'is_decision_point': is_decision_point(node_id),
+            'description': get_decision_point_info(node_id)['description']
+                           if get_decision_point_info(node_id) else f"{node.type_name} {node_id}"
+        })
+
     return jsonify({
         'success': True,
         'path': path,
@@ -332,12 +357,38 @@ def api_get_restroom():
     """Get restroom room ID for destination ID"""
     data = request.json
     start_id = data.get('startId')
+    has_keycard = data.get('has_keycard', False)  # Default to no keycard access
     
     if start_id not in graph.nodes:
         return jsonify({'success': False, 'error': 'Invalid start node'})
     
-    edges_data = edges.data
-    end = find_restroom(graph, start_id, edges_data)
+    # Get regular edges
+    try:
+        regular_edges = supabase.table("Edge Table").select("*").execute()
+        all_edges_data = regular_edges.data
+    except Exception as e:
+        print(f"Error fetching regular edge data: {e}")
+        all_edges_data = edges.data  # Fall back to the original data
+    
+    # Add keycard edges if the user has keycard access
+    if has_keycard:
+        try:
+            keycard_edges = supabase.table("Keycard Edge Table").select("*").execute()
+            
+            print("=== KEYCARD EDGES TABLE CONTENT ===")
+            for i, edge in enumerate(keycard_edges.data):
+                print(f"Edge {i+1}: {edge}")
+            print("=== END KEYCARD EDGES TABLE CONTENT ===")
+            
+            if keycard_edges.data:
+                all_edges_data.extend(keycard_edges.data)
+                print(f"Added {len(keycard_edges.data)} keycard edges to restroom finder")
+        except Exception as e:
+            print(f"Error fetching keycard edge data: {e}")
+    
+    keycard_edges_data = keycard_edges.data if has_keycard and 'keycard_edges' in locals() else None
+    end = find_restroom(graph, start_id, regular_edges.data, keycard_edges_data, has_keycard)
+
     if not end:
         return jsonify({'success': False, 'error': 'No restroom found'})
     return jsonify({
