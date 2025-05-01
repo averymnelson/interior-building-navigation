@@ -105,6 +105,8 @@ def a_star(
     print("No path found")
     return []
 
+# Correct implementation of find_restroom function that aligns with a_star parameters:
+
 def find_restroom(graph: NavigationGraph, room_id: str, edges_data=None, keycard_edges_data=None, has_keycard=False):
     """Find the nearest restroom from a given room"""
     restrooms = [1162, 1166, 1265, 1261, 2513, 2517, 4407, 4405, 4721, 4725]
@@ -114,10 +116,21 @@ def find_restroom(graph: NavigationGraph, room_id: str, edges_data=None, keycard
     fewest_non_hallways = float('inf')
 
     if room_id in map(str, restrooms):
-        return []
+        return room_id  # If already at a restroom, return the same id
+
+    # Prepare all edges for pathfinding
+    all_edges = []
+    if edges_data:
+        all_edges.extend(edges_data)
+    
+    # Add keycard edges if user has keycard
+    if has_keycard and keycard_edges_data:
+        all_edges.extend(keycard_edges_data)
+        print(f"✅ Added {len(keycard_edges_data)} keycard edges to restroom search")
 
     for restroom_id in restrooms:
-        path = a_star(graph, room_id, str(restroom_id), edges_data, keycard_edges_data, True, has_keycard)
+        # Call a_star with the correct number of parameters
+        path = a_star(graph, room_id, str(restroom_id), all_edges, True)
         
         if path:
             # Count non-hallway segments
@@ -125,21 +138,12 @@ def find_restroom(graph: NavigationGraph, room_id: str, edges_data=None, keycard
             
             # Create a dictionary for quick edge lookup
             edge_lookup = {}
-            if edges_data:
-                for edge in edges_data:
-                    key1 = f"{edge['pointnum1']}-{edge['pointnum2']}"
-                    key2 = f"{edge['pointnum2']}-{edge['pointnum1']}"
-                    is_hallway = edge.get('hallway', False)
-                    edge_lookup[key1] = {'hallway': is_hallway}
-                    edge_lookup[key2] = {'hallway': is_hallway}
-            
-            if has_keycard and keycard_edges_data:
-                for edge in keycard_edges_data:
-                    key1 = f"{edge['pointnum1']}-{edge['pointnum2']}"
-                    key2 = f"{edge['pointnum2']}-{edge['pointnum1']}"
-                    is_hallway = edge.get('hallway', False)
-                    edge_lookup[key1] = {'hallway': is_hallway}
-                    edge_lookup[key2] = {'hallway': is_hallway}
+            for edge in all_edges:
+                key1 = f"{edge['pointnum1']}-{edge['pointnum2']}"
+                key2 = f"{edge['pointnum2']}-{edge['pointnum1']}"
+                is_hallway = edge.get('hallway', False)
+                edge_lookup[key1] = {'hallway': is_hallway}
+                edge_lookup[key2] = {'hallway': is_hallway}
             
             for i in range(len(path) - 1):
                 edge_key = f"{path[i]}-{path[i+1]}"

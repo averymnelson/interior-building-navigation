@@ -37,6 +37,9 @@
             <!-- Datalist containing predefined options -->
             <datalist id="destination-list">
                 <option value="Restroom">
+                <option value="Bathroom">
+                <option value="Washroom">
+                <option value="Toilet">
                 <!-- Add more options as needed -->
             </datalist>
 
@@ -300,7 +303,12 @@ async function calculateRouteFromText(startText, destinationText) {
 
     // First, check if the destination is a restroom
     // Update in the calculateRouteFromText function where it handles restrooms
-if (destinationText.toLowerCase() === 'restroom' || destinationText.toLowerCase() === 'bathroom') {
+const restroomKeywords = ['restroom', 'bathroom', 'toilet', 'lavatory', 'washroom', 'wc'];
+const isRestroom = restroomKeywords.some(keyword => 
+    destinationText.toLowerCase().includes(keyword)
+);
+
+if (isRestroom) {
     try {
         // Check if the user has keycard access
         const hasKeycard = localStorage.getItem('keycardToggle') === 'true';

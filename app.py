@@ -352,6 +352,8 @@ def api_calculate_route():
         'instructions': instructions
     })
 
+# Replace the existing api_get_restroom route with this improved version:
+
 @app.route('/api/get-restroom', methods=['POST'])
 def api_get_restroom():
     """Get restroom room ID for destination ID"""
@@ -362,40 +364,39 @@ def api_get_restroom():
     if start_id not in graph.nodes:
         return jsonify({'success': False, 'error': 'Invalid start node'})
     
+    print(f"Finding nearest restroom from {start_id} with keycard access: {has_keycard}")
+    
     # Get regular edges
     try:
         regular_edges = supabase.table("Edge Table").select("*").execute()
         all_edges_data = regular_edges.data
     except Exception as e:
         print(f"Error fetching regular edge data: {e}")
-        all_edges_data = edges.data  # Fall back to the original data
+        return jsonify({'success': False, 'error': 'Could not fetch edges'})
     
     # Add keycard edges if the user has keycard access
+    keycard_edges_data = None
     if has_keycard:
         try:
             keycard_edges = supabase.table("Keycard Edge Table").select("*").execute()
+            keycard_edges_data = keycard_edges.data
             
-            print("=== KEYCARD EDGES TABLE CONTENT ===")
-            for i, edge in enumerate(keycard_edges.data):
-                print(f"Edge {i+1}: {edge}")
-            print("=== END KEYCARD EDGES TABLE CONTENT ===")
-            
-            if keycard_edges.data:
-                all_edges_data.extend(keycard_edges.data)
-                print(f"Added {len(keycard_edges.data)} keycard edges to restroom finder")
+            print(f"Using {len(keycard_edges_data)} keycard edges for restroom search")
         except Exception as e:
             print(f"Error fetching keycard edge data: {e}")
     
-    keycard_edges_data = keycard_edges.data if has_keycard and 'keycard_edges' in locals() else None
-    end = find_restroom(graph, start_id, regular_edges.data, keycard_edges_data, has_keycard)
+    # Call find_restroom with the corrected parameters
+    end = find_restroom(graph, start_id, all_edges_data, keycard_edges_data, has_keycard)
 
     if not end:
         return jsonify({'success': False, 'error': 'No restroom found'})
+    
+    print(f"Found nearest restroom: {end}")
     return jsonify({
         'success': True,
         'end': end
     })
-
+    
 @app.route('/api/next-decision-point', methods=['POST'])
 def api_get_next_decision_point():
     """Get the next decision point along a path"""
